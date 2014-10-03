@@ -185,7 +185,14 @@ class MathRange {
       return $this;
     }
     elseif ($this->isEmpty()) {
-      return $toJoin;
+      // Copy $toJoin.
+      $this->lBoundIn = $toJoin->includeLowerBound();
+      $this->lBound = $toJoin->getLowerBound();
+      $this->uBound = $toJoin->getUpperBound();
+      $this->uBoundIn = $toJoin->includeUpperBound();
+      $this->allowFloat = $toJoin->allowFloats();
+      $this->emptyRange = $toJoin->isEmpty();
+      return $this;
     }
     
     // Handle float values.

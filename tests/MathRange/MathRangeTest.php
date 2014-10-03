@@ -194,6 +194,114 @@ class MathRangeTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse($r->includeUpperBound());
     $this->assertTrue($r->isEmpty());
     $this->assertTrue($r->allowFloats());  
-    $this->assertEquals(']0.0 ,0.0[', $r->__toString());
+    $this->assertEquals(']0.0,0.0[', $r->__toString());
+  }
+
+  function dataProviderRangeUnion() {
+    return array(
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array('[1,2]', '[3,4]', '[1,4]', TRUE, 1, 4, TRUE, FALSE, FALSE),
+      array('[1,2]', '[3,4[', '[1,4[', TRUE, 1, 4, FALSE, FALSE, FALSE),
+      array('[1,2]', ']3,4]', '[1,4]', TRUE, 1, 4, TRUE, FALSE, FALSE),
+      array('[1,2]', ']3,4[', '[1,4[', TRUE, 1, 4, FALSE, FALSE, FALSE),
+      array('[1,2[', '[3,4]', '[1,4]', TRUE, 1, 4, TRUE, FALSE, FALSE),
+      array('[1,2[', '[3,4[', '[1,4[', TRUE, 1, 4, FALSE, FALSE, FALSE),
+      array('[1,2[', ']3,4]', '[1,4]', TRUE, 1, 4, TRUE, FALSE, FALSE),
+      array('[1,2[', ']3,4[', '[1,4[', TRUE, 1, 4, FALSE, FALSE, FALSE),
+      array(']1,2]', '[3,4]', ']1,4]', FALSE, 1, 4, TRUE, FALSE, FALSE),
+      array(']1,2]', '[3,4[', ']1,4[', FALSE, 1, 4, FALSE, FALSE, FALSE),
+      array(']1,2]', ']3,4]', ']1,4]', FALSE, 1, 4, TRUE, FALSE, FALSE),
+      array(']1,2]', ']3,4[', ']1,4[', FALSE, 1, 4, FALSE, FALSE, FALSE),
+      array(']1,2[', '[3,4]', ']1,4]', FALSE, 1, 4, TRUE, FALSE, FALSE),
+      array(']1,2[', '[3,4[', ']1,4[', FALSE, 1, 4, FALSE, FALSE, FALSE),
+      array(']1,2[', ']3,4]', ']1,4]', FALSE, 1, 4, TRUE, FALSE, FALSE),
+      array(']1,2[', ']3,4[', ']1,4[', FALSE, 1, 4, FALSE, FALSE, FALSE),
+
+      // Cases where a range fits inside another.
+      array('[1,10]', '[3,4]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10]', '[3,4[', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10]', ']3,4]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10]', ']3,4[', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10[', '[3,4]', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10[', '[3,4[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10[', ']3,4]', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10[', ']3,4[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10]', '[3,4]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10]', '[3,4[', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10]', ']3,4]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10]', ']3,4[', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10[', '[3,4]', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10[', '[3,4[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10[', ']3,4]', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10[', ']3,4[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array('[1,3.14]', '[3.14,4]', '[1.0,4.0]', TRUE, 1, 4, TRUE, FALSE, TRUE),
+      array('[1,3.14]', '[3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
+      array('[1,3.14]', ']3.14,4]', '[1.0,4.0]', TRUE, 1, 4, TRUE, FALSE, TRUE),
+      array('[1,3.14]', ']3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
+      array('[1,3.14[', '[3.14,4]', '[1.0,4.0]', TRUE, 1, 4, TRUE, FALSE, TRUE),
+      array('[1,3.14[', '[3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
+      array('[1,3.14[', ']3.14,4]', '[1.0,4.0]', TRUE, 1, 4, TRUE, FALSE, TRUE),
+      array('[1,3.14[', ']3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
+      array(']1,3.14]', '[3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
+      array(']1,3.14]', '[3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
+      array(']1,3.14]', ']3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
+      array(']1,3.14]', ']3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
+      array(']1,3.14[', '[3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
+      array(']1,3.14[', '[3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
+      array(']1,3.14[', ']3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
+      array(']1,3.14[', ']3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
+
+      // Cases where a range fits inside another.
+      array('[1,10]', '[3.14,4]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10]', '[3.14,4[', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10]', ']3.14,4]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10]', ']3.14,4[', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10[', '[3.14,4]', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10[', '[3.14,4[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10[', ']3.14,4]', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10[', ']3.14,4[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10]', '[3.14,4]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10]', '[3.14,4[', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10]', ']3.14,4]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10]', ']3.14,4[', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10[', '[3.14,4]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10[', '[3.14,4[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10[', ']3.14,4]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10[', ']3.14,4[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+
+      // A union will never results in empty range unless two empty ranges
+      // are united.
+      array(']1,1]', ']0,0[', ']0,0[', FALSE, 0, 0, FALSE, TRUE, FALSE),
+      array(']1,1.0]', ']0,0[', ']0.0,0.0[', FALSE, 0, 0, FALSE, TRUE, TRUE),
+      
+      // Unions with empty ranges.
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array('[1,10]', ']0,0[', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10[', ']0,0[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10]', ']0,0[', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10[', ']0,0[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      
+      array(']0,0[', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array(']0,0[', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array(']0,0[', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']0,0[', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+    );
+  }
+  
+  /**
+   * @dataProvider dataProviderRangeUnion
+   */
+  public function testRangeUnion($range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats) {
+    $r = new MathRange($range);
+    $r->union($union);
+    $this->assertEquals($expLBoundIn, $r->includeLowerBound(), 'Include lower bound.');
+    $this->assertEquals($expLBound, $r->getLowerBound(), 'Value lower bound.');
+    $this->assertEquals($expUBound, $r->getUpperBound(), 'Value upper bound.');
+    $this->assertEquals($expUBoundIn, $r->includeUpperBound(), 'Include upper bound.');
+    $this->assertEquals($expEmpty, $r->isEmpty(), 'Is empty range.');
+    $this->assertEquals($expFloats, $r->allowFloats(), 'Range allows floats.');  
+    $this->assertEquals($output, $r->__toString());
   }
 }
