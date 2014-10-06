@@ -21,6 +21,16 @@ class MathRange {
   function __construct($expression) {
     $range = MathRange::compute($expression);
 
+    // Check for empty.
+    switch ($range) {
+      case ']0,0[':
+         $this->allowFloat = FALSE;
+      case ']0.0,0.0[':
+        // If compute returned an empty range initialize as such.
+        return $this->setEmpty();
+      break;
+    }
+
     // Chop pieces. Validation was already done in compute().
     preg_match('/^'.MATH_RANGE_REGEX.'$/', $range, $pieces);
     list(, $lbound_in_ex, $lbound, $ubound, $ubound_in_ex) = $pieces;
@@ -28,31 +38,12 @@ class MathRange {
     $lbound += 0;
     $ubound += 0;
 
-    if (is_int($lbound) && is_int($ubound)) {
-      $this->allowFloat = FALSE;
-    }
-
-    // Check for empty.
-    switch ($range) {
-      case ']0.0,0.0[':
-      case ']0,0[':
-        // [1,1] is a valid range allowing only the number 1.
-        // ]1,1], [1,1[ and ]1,1[ are all empty.
-        // Therefore initialize as an empty range.]0,0[
-        // This is needed to perform unions and intersections.
-        $lbound_in_ex = ']';
-        $lbound = 0;
-        $ubound = 0;
-        $ubound_in_ex = '[';
-        $this->emptyRange = TRUE;
-      break;
-    }
-
     $this->lBoundIn = $lbound_in_ex == '[' ? TRUE : FALSE;
     $this->lBound = $lbound;
     $this->uBound = $ubound;
     $this->uBoundIn = $ubound_in_ex == ']' ? TRUE : FALSE;
 
+    $this->allowFloat = !(is_int($lbound) && is_int($ubound));
   }
 
   function __toString() {
@@ -152,6 +143,16 @@ class MathRange {
       throw new MathRangeException("Invalid expression.");
     }
   }
+
+  private function setEmpty() {
+    $this->lBoundIn = FALSE;
+    $this->lBound = 0;
+    $this->uBound = 0;
+    $this->uBoundIn = FALSE;
+    $this->emptyRange = TRUE;
+    
+    return $this;
+  }
   
   public function getUpperBound() {
     return $this->uBound;
@@ -196,11 +197,9 @@ class MathRange {
     }
     
     // Handle float values.
-    if ($toJoin->allowFloats()) {
-      $this->allowFloat = TRUE;
-    }
+    $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
     
-    // No empty ranges. Do merge.
+    // No empty ranges. Unite.
     // Upper bound.
     if ($toJoin->getUpperBound() > $this->getUpperBound()) {
       // Since the upper bound of the expression to join is higher
@@ -234,6 +233,77 @@ class MathRange {
     // else the current rage stays as is.
     
     return $this;
+  }
+
+  public function intersection($expression) {
+    $toJoin = new MathRange($expression);
+
+    // Handle empty ranges.
+    // Intersection with an empty range is always empty.
+    if ($toJoin->isEmpty()) {
+      return $this->setEmpty();
+    }
+    elseif ($this->isEmpty()) {
+      return $this;
+    }
+    
+    // Handle float values.
+    $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
+    
+    // No empty ranges. Intersect.
+    // Check if $this contains $toJoin;
+    if ($this->getLowerBound() < $toJoin->getLowerBound() && $this->getUpperBound() > $toJoin->getUpperBound()) {
+      // Copy $toJoin.
+      $this->lBoundIn = $toJoin->includeLowerBound();
+      $this->lBound = $toJoin->getLowerBound();
+      $this->uBound = $toJoin->getUpperBound();
+      $this->uBoundIn = $toJoin->includeUpperBound();
+      $this->allowFloat = $toJoin->allowFloats();
+      $this->emptyRange = $toJoin->isEmpty();
+      return $this;
+    }
+    // Check if $toJoin contains $this;
+    elseif ($this->getLowerBound() > $toJoin->getLowerBound() && $this->getUpperBound() < $toJoin->getUpperBound()) {
+      return $this;
+    }
+    
+    // Find out which range comes first.
+    if ($this->getLowerBound() <= $toJoin->getLowerBound() && $this->getUpperBound() <= $toJoin->getUpperBound()) {
+      $small = $this;
+      $big = $toJoin;
+    }
+    else {
+      $small = $toJoin;
+      $big = $this;
+    }
+    
+    // Case:
+    //  __________  _________
+    //           | |
+    //------------------------
+    if ($small->getUpperBound() < $big->getLowerBound()) {
+      // No intersection.
+      return $this->setEmpty();
+    }
+    // Case: (the upper and lower are the same.)
+    //  ___________________
+    //           |
+    //------------------------
+    elseif ($small->getUpperBound() == $big->getLowerBound()) {
+      // The only possible option here is a range with only one value allowed
+      // like [1,1] but for that both bounds need to be included.
+      if ($small->includeUpperBound() && $big->includeLowerBound()) {
+        $this->lBoundIn = TRUE;
+        $this->lBound = $small->getUpperBound();
+        $this->uBound = $small->getUpperBound();
+        $this->uBoundIn = TRUE;
+        return $this;
+      }
+      else {
+        // No intersection.
+        return $this->setEmpty();
+      }
+    }
   }
 }
 

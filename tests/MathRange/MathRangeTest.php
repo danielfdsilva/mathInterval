@@ -35,7 +35,7 @@ class MathRangeTest extends PHPUnit_Framework_TestCase {
   public function testExceptionWrongBounds2() {
     new MathRange('[-9,-10.2]');
   }
-  
+
   public function testRange() {
     $r = new MathRange('[1,2]');
     $this->assertTrue($r->includeLowerBound());
@@ -158,7 +158,7 @@ class MathRangeTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse($r->allowFloats());  
     $this->assertEquals(']0,0[', $r->__toString());
   }
-  
+
   public function testRangeEmptyWithFloats() {
     $r = new MathRange('[1.0,1]');
     $this->assertTrue($r->includeLowerBound());
@@ -296,6 +296,40 @@ class MathRangeTest extends PHPUnit_Framework_TestCase {
   public function testRangeUnion($range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats) {
     $r = new MathRange($range);
     $r->union($union);
+    $this->assertEquals($expLBoundIn, $r->includeLowerBound(), 'Include lower bound.');
+    $this->assertEquals($expLBound, $r->getLowerBound(), 'Value lower bound.');
+    $this->assertEquals($expUBound, $r->getUpperBound(), 'Value upper bound.');
+    $this->assertEquals($expUBoundIn, $r->includeUpperBound(), 'Include upper bound.');
+    $this->assertEquals($expEmpty, $r->isEmpty(), 'Is empty range.');
+    $this->assertEquals($expFloats, $r->allowFloats(), 'Range allows floats.');  
+    $this->assertEquals($output, $r->__toString());
+  }
+
+  function dataProviderRangeIntersection() {
+    return array(
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array('[1,10]', '[3,4]', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      array('[3,4]', '[1,10]', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      
+      array('[1,3]', '[4,6]', ']0,0[', FALSE, 0, 0, FALSE, TRUE, FALSE),
+      array('[4,6]', '[1,3]', ']0,0[', FALSE, 0, 0, FALSE, TRUE, FALSE),
+      array('[1.0,3]', '[4,6]', ']0.0,0.0[', FALSE, 0, 0, FALSE, TRUE, TRUE),
+      array('[4,6]', '[1.0,3]', ']0.0,0.0[', FALSE, 0, 0, FALSE, TRUE, TRUE),
+
+      array('[1,3]', '[3,6]', '[3,3]', TRUE, 3, 3, TRUE, FALSE, FALSE),
+      array('[3,6]', '[1,3]', '[3,3]', TRUE, 3, 3, TRUE, FALSE, FALSE),
+      array('[3,6]', '[1,3[', ']0,0[', FALSE, 0, 0, FALSE, TRUE, FALSE),
+      array('[1.0,3]', '[3,6]', '[3.0,3.0]', TRUE, 3, 3, TRUE, FALSE, TRUE),
+      array('[3,6]', '[1.0,3]', '[3.0,3.0]', TRUE, 3, 3, TRUE, FALSE, TRUE),
+    );
+  }
+  
+  /**
+   * @dataProvider dataProviderRangeIntersection
+   */
+  public function testRangeIntersection($range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats) {
+    $r = new MathRange($range);
+    $r->intersection($union);
     $this->assertEquals($expLBoundIn, $r->includeLowerBound(), 'Include lower bound.');
     $this->assertEquals($expLBound, $r->getLowerBound(), 'Value lower bound.');
     $this->assertEquals($expUBound, $r->getUpperBound(), 'Value upper bound.');
