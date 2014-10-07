@@ -108,7 +108,7 @@ class MathRange {
         return (is_int($lbound) && is_int($ubound)) ? ']0,0[' : ']0.0,0.0[';
       }
     }
-    elseif (preg_match('/^'.MATH_RANGE_EXPRESSION_REGEX.'$/', $expression, $results)) {
+    /*elseif (preg_match('/^'.MATH_RANGE_EXPRESSION_REGEX.'$/', $expression, $results)) {
       // There are no atoms to extract.
       // Proceed to compute.
       $atom = $results[0];
@@ -117,22 +117,22 @@ class MathRange {
       // First element is always a range.
       // The regex already validated this.
       $working_range = new MathRange(array_shift($ranges));
-
+      $op = current($ranges);
+      
       do {
-        $op = current($ranges);
         $exp = next($ranges);
         
         if ($op == 'or') {
           $working_range->union($exp);
         }
         elseif ($op == 'and') {
-          //intersection
+          $working_range->intersection($exp);
         } 
       }
       while ($op = next($ranges));
       
       return $working_range->__toString();
-    }
+    }*/
     /*elseif (preg_match('/'.MathRange::RANGE_EXP_ATOM_REGEX.'/', $expression, $atoms)) {
       // Extracted atom.
       $atom = $atoms[1];
@@ -181,6 +181,9 @@ class MathRange {
   public function union($expression) {
     $toJoin = new MathRange($expression);
     
+    // Handle float values.
+    $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
+    
     // Handle empty ranges.
     if ($toJoin->isEmpty()) {
       return $this;
@@ -191,13 +194,11 @@ class MathRange {
       $this->lBound = $toJoin->getLowerBound();
       $this->uBound = $toJoin->getUpperBound();
       $this->uBoundIn = $toJoin->includeUpperBound();
-      $this->allowFloat = $toJoin->allowFloats();
+      // Allowing floats depends on both ranges. Do not copy this property.
+      // $this->allowFloat = $toJoin->allowFloats();
       $this->emptyRange = $toJoin->isEmpty();
       return $this;
     }
-    
-    // Handle float values.
-    $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
     
     // No empty ranges. Unite.
     // Upper bound.
@@ -237,6 +238,9 @@ class MathRange {
 
   public function intersection($expression) {
     $toJoin = new MathRange($expression);
+    
+    // Handle float values.
+    $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
 
     // Handle empty ranges.
     // Intersection with an empty range is always empty.
@@ -246,9 +250,6 @@ class MathRange {
     elseif ($this->isEmpty()) {
       return $this;
     }
-    
-    // Handle float values.
-    $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
 
     // No empty ranges. Intersect.
     // Check if $this contains $toJoin;
@@ -316,6 +317,32 @@ class MathRange {
       $this->uBoundIn = $first->includeUpperBound() && $second->includeUpperBound();
       return $this;
     }
+    // Case: (Ranges overlap on lower.)
+    //   __________________
+    //  |_____________    |    --> $second
+    //  |            |         --> $first
+    //------------------------
+    elseif ($first->getLowerBound() == $second->getLowerBound() && $first->getUpperBound() < $second->getUpperBound()) {
+      // Values are the same. Set only inclusions.
+      $this->lBoundIn = $first->includeLowerBound() && $second->includeLowerBound();
+      $this->lBound = $first->getLowerBound();
+      $this->uBound = $first->getUpperBound();
+      $this->uBoundIn = $first->includeUpperBound();
+      return $this;
+    }
+    // Case: (Ranges overlap on upper.)
+    //   __________________
+    //  |    _____________|    --> $first
+    //      |            |     --> $second
+    //------------------------
+    elseif ($first->getLowerBound() < $second->getLowerBound() && $first->getUpperBound() == $second->getUpperBound()) {
+      // Values are the same. Set only inclusions.
+      $this->lBoundIn = $second->includeLowerBound();
+      $this->lBound = $second->getLowerBound();
+      $this->uBound = $second->getUpperBound();
+      $this->uBoundIn = $first->includeUpperBound() && $second->includeUpperBound();
+      return $this;
+    }
     // Having excluded all other cases the remaining one is:
     //         ____________
     //  ______|_______    |    --> $second
@@ -323,11 +350,13 @@ class MathRange {
     //------------------------
     // The upper bound belongs to $first and
     // the lower bound belongs to $second.
-    $this->lBoundIn = $second->includeLowerBound();
-    $this->lBound = $second->getLowerBound();
-    $this->uBound = $first->getUpperBound();
-    $this->uBoundIn = $first->includeUpperBound();
-    return $this;
+    else {
+      $this->lBoundIn = $second->includeLowerBound();
+      $this->lBound = $second->getLowerBound();
+      $this->uBound = $first->getUpperBound();
+      $this->uBoundIn = $first->includeUpperBound();
+      return $this;
+    }
   }
 }
 
