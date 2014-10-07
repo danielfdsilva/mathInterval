@@ -307,20 +307,135 @@ class MathRangeTest extends PHPUnit_Framework_TestCase {
 
   function dataProviderRangeIntersection() {
     return array(
+
+      // Ranges with equal values but different inclusions.
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array('[1,10]', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10]', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10]', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10]', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10[', '[1,10]', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10[', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10[', ']1,10]', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10[', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10]', '[1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10]', '[1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10]', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10]', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10[', '[1,10]', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10[', '[1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10[', ']1,10]', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10[', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+
+      array('[1,10.0]', '[1,10]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10.0]', '[1,10[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10.0]', ']1,10]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10.0]', ']1,10[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10.0[', '[1,10]', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10.0[', '[1,10[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10.0[', ']1,10]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10.0[', ']1,10[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10.0]', '[1,10]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10.0]', '[1,10[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10.0]', ']1,10]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10.0]', ']1,10[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10.0[', '[1,10]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10.0[', '[1,10[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10.0[', ']1,10]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10.0[', ']1,10[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+
+
+      // One range includes the other.
       // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
       array('[1,10]', '[3,4]', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      array('[1,10]', '[3,4[', '[3,4[', TRUE, 3, 4, FALSE, FALSE, FALSE),
+      array('[1,10]', ']3,4]', ']3,4]', FALSE, 3, 4, TRUE, FALSE, FALSE),
+      array('[1,10]', ']3,4[', ']3,4[', FALSE, 3, 4, FALSE, FALSE, FALSE),
+      array('[1,10[', '[3,4]', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      array('[1,10[', '[3,4[', '[3,4[', TRUE, 3, 4, FALSE, FALSE, FALSE),
+      array('[1,10[', ']3,4]', ']3,4]', FALSE, 3, 4, TRUE, FALSE, FALSE),
+      array('[1,10[', ']3,4[', ']3,4[', FALSE, 3, 4, FALSE, FALSE, FALSE),
+      array(']1,10]', '[3,4]', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      array(']1,10]', '[3,4[', '[3,4[', TRUE, 3, 4, FALSE, FALSE, FALSE),
+      array(']1,10]', ']3,4]', ']3,4]', FALSE, 3, 4, TRUE, FALSE, FALSE),
+      array(']1,10]', ']3,4[', ']3,4[', FALSE, 3, 4, FALSE, FALSE, FALSE),
+      array(']1,10[', '[3,4]', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      array(']1,10[', '[3,4[', '[3,4[', TRUE, 3, 4, FALSE, FALSE, FALSE),
+      array(']1,10[', ']3,4]', ']3,4]', FALSE, 3, 4, TRUE, FALSE, FALSE),
+      array(']1,10[', ']3,4[', ']3,4[', FALSE, 3, 4, FALSE, FALSE, FALSE),
+
+      array('[1,10.0]', '[3,4]', '[3.0,4.0]', TRUE, 3, 4, TRUE, FALSE, TRUE),
+      array('[1,10.0]', '[3,4[', '[3.0,4.0[', TRUE, 3, 4, FALSE, FALSE, TRUE),
+      array('[1,10.0]', ']3,4]', ']3.0,4.0]', FALSE, 3, 4, TRUE, FALSE, TRUE),
+      array('[1,10.0]', ']3,4[', ']3.0,4.0[', FALSE, 3, 4, FALSE, FALSE, TRUE),
+      array('[1,10.0[', '[3,4]', '[3.0,4.0]', TRUE, 3, 4, TRUE, FALSE, TRUE),
+      array('[1,10.0[', '[3,4[', '[3.0,4.0[', TRUE, 3, 4, FALSE, FALSE, TRUE),
+      array('[1,10.0[', ']3,4]', ']3.0,4.0]', FALSE, 3, 4, TRUE, FALSE, TRUE),
+      array('[1,10.0[', ']3,4[', ']3.0,4.0[', FALSE, 3, 4, FALSE, FALSE, TRUE),
+      array(']1,10.0]', '[3,4]', '[3.0,4.0]', TRUE, 3, 4, TRUE, FALSE, TRUE),
+      array(']1,10.0]', '[3,4[', '[3.0,4.0[', TRUE, 3, 4, FALSE, FALSE, TRUE),
+      array(']1,10.0]', ']3,4]', ']3.0,4.0]', FALSE, 3, 4, TRUE, FALSE, TRUE),
+      array(']1,10.0]', ']3,4[', ']3.0,4.0[', FALSE, 3, 4, FALSE, FALSE, TRUE),
+      array(']1,10.0[', '[3,4]', '[3.0,4.0]', TRUE, 3, 4, TRUE, FALSE, TRUE),
+      array(']1,10.0[', '[3,4[', '[3.0,4.0[', TRUE, 3, 4, FALSE, FALSE, TRUE),
+      array(']1,10.0[', ']3,4]', ']3.0,4.0]', FALSE, 3, 4, TRUE, FALSE, TRUE),
+      array(']1,10.0[', ']3,4[', ']3.0,4.0[', FALSE, 3, 4, FALSE, FALSE, TRUE),
+
+      // Switch order.
       array('[3,4]', '[1,10]', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
-      
+      array('[3,4[', '[1,10]', '[3,4[', TRUE, 3, 4, FALSE, FALSE, FALSE),
+      array(']3,4]', '[1,10]', ']3,4]', FALSE, 3, 4, TRUE, FALSE, FALSE),
+      array(']3,4[', '[1,10]', ']3,4[', FALSE, 3, 4, FALSE, FALSE, FALSE),
+      array('[3,4]', '[1,10[', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      array('[3,4[', '[1,10[', '[3,4[', TRUE, 3, 4, FALSE, FALSE, FALSE),
+      array(']3,4]', '[1,10[', ']3,4]', FALSE, 3, 4, TRUE, FALSE, FALSE),
+      array(']3,4[', '[1,10[', ']3,4[', FALSE, 3, 4, FALSE, FALSE, FALSE),
+      array('[3,4]', ']1,10]', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      array('[3,4[', ']1,10]', '[3,4[', TRUE, 3, 4, FALSE, FALSE, FALSE),
+      array(']3,4]', ']1,10]', ']3,4]', FALSE, 3, 4, TRUE, FALSE, FALSE),
+      array(']3,4[', ']1,10]', ']3,4[', FALSE, 3, 4, FALSE, FALSE, FALSE),
+      array('[3,4]', ']1,10[', '[3,4]', TRUE, 3, 4, TRUE, FALSE, FALSE),
+      array('[3,4[', ']1,10[', '[3,4[', TRUE, 3, 4, FALSE, FALSE, FALSE),
+      array(']3,4]', ']1,10[', ']3,4]', FALSE, 3, 4, TRUE, FALSE, FALSE),
+      array(']3,4[', ']1,10[', ']3,4[', FALSE, 3, 4, FALSE, FALSE, FALSE),
+
+      array('[3,4]', '[1,10.0]', '[3.0,4.0]', TRUE, 3, 4, TRUE, FALSE, TRUE),
+      array('[3,4[', '[1,10.0]', '[3.0,4.0[', TRUE, 3, 4, FALSE, FALSE, TRUE),
+      array(']3,4]', '[1,10.0]', ']3.0,4.0]', FALSE, 3, 4, TRUE, FALSE, TRUE),
+      array(']3,4[', '[1,10.0]', ']3.0,4.0[', FALSE, 3, 4, FALSE, FALSE, TRUE),
+      array('[3,4]', '[1,10.0[', '[3.0,4.0]', TRUE, 3, 4, TRUE, FALSE, TRUE),
+      array('[3,4[', '[1,10.0[', '[3.0,4.0[', TRUE, 3, 4, FALSE, FALSE, TRUE),
+      array(']3,4]', '[1,10.0[', ']3.0,4.0]', FALSE, 3, 4, TRUE, FALSE, TRUE),
+      array(']3,4[', '[1,10.0[', ']3.0,4.0[', FALSE, 3, 4, FALSE, FALSE, TRUE),
+      array('[3,4]', ']1,10.0]', '[3.0,4.0]', TRUE, 3, 4, TRUE, FALSE, TRUE),
+      array('[3,4[', ']1,10.0]', '[3.0,4.0[', TRUE, 3, 4, FALSE, FALSE, TRUE),
+      array(']3,4]', ']1,10.0]', ']3.0,4.0]', FALSE, 3, 4, TRUE, FALSE, TRUE),
+      array(']3,4[', ']1,10.0]', ']3.0,4.0[', FALSE, 3, 4, FALSE, FALSE, TRUE),
+      array('[3,4]', ']1,10.0[', '[3.0,4.0]', TRUE, 3, 4, TRUE, FALSE, TRUE),
+      array('[3,4[', ']1,10.0[', '[3.0,4.0[', TRUE, 3, 4, FALSE, FALSE, TRUE),
+      array(']3,4]', ']1,10.0[', ']3.0,4.0]', FALSE, 3, 4, TRUE, FALSE, TRUE),
+      array(']3,4[', ']1,10.0[', ']3.0,4.0[', FALSE, 3, 4, FALSE, FALSE, TRUE),
+
+      // Ranges do not intersect.
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
       array('[1,3]', '[4,6]', ']0,0[', FALSE, 0, 0, FALSE, TRUE, FALSE),
       array('[4,6]', '[1,3]', ']0,0[', FALSE, 0, 0, FALSE, TRUE, FALSE),
       array('[1.0,3]', '[4,6]', ']0.0,0.0[', FALSE, 0, 0, FALSE, TRUE, TRUE),
       array('[4,6]', '[1.0,3]', ']0.0,0.0[', FALSE, 0, 0, FALSE, TRUE, TRUE),
-
+      
+      // Ranges intersect in only one point.
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
       array('[1,3]', '[3,6]', '[3,3]', TRUE, 3, 3, TRUE, FALSE, FALSE),
       array('[3,6]', '[1,3]', '[3,3]', TRUE, 3, 3, TRUE, FALSE, FALSE),
       array('[3,6]', '[1,3[', ']0,0[', FALSE, 0, 0, FALSE, TRUE, FALSE),
       array('[1.0,3]', '[3,6]', '[3.0,3.0]', TRUE, 3, 3, TRUE, FALSE, TRUE),
       array('[3,6]', '[1.0,3]', '[3.0,3.0]', TRUE, 3, 3, TRUE, FALSE, TRUE),
+
+      // Ranges intersect.
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      
+      // Intersection with empty.
+      // $range, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
     );
   }
   
