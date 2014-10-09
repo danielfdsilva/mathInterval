@@ -10,7 +10,7 @@
          verbose="true">
 	<testsuites>
 		<testsuite name="default">
-			<directory>tests/MathRange</directory>
+			<directory>tests/MathInterval</directory>
 		</testsuite>
 	</testsuites>
 	<php>

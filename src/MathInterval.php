@@ -3,36 +3,36 @@
 // In class constants you can't define constants with concatenation
 // because of reasons.
 // Match: [1,2].
-define('MATH_RANGE_REGEX', '(\[|\])(-?[0-9]+(?:\.?[0-9]+)?),(-?[0-9]+(?:\.?[0-9]+)?)(\[|\])');
+define('MATH_INTERVAL_REGEX', '(\[|\])(-?[0-9]+(?:\.?[0-9]+)?),(-?[0-9]+(?:\.?[0-9]+)?)(\[|\])');
 // Match: [1,2] or [3,4] and [5,6].
-define('MATH_RANGE_EXPRESSION_REGEX', MATH_RANGE_REGEX . '(?: (?:or|and) '.MATH_RANGE_REGEX.')*');
+define('MATH_INTERVAL_EXPRESSION_REGEX', MATH_INTERVAL_REGEX . '(?: (?:or|and) '.MATH_INTERVAL_REGEX.')*');
 // Match: ([1,2] or [3,4]).
-define('MATH_RANGE_EXP_ATOM_REGEX', '\(('.MATH_RANGE_EXPRESSION_REGEX.'\)');
+define('MATH_INTERVAL_EXP_ATOM_REGEX', '\(('.MATH_INTERVAL_EXPRESSION_REGEX.'\)');
 
-class MathRange {
+class MathInterval {
 
   private $lBoundIn = NULL;
   private $lBound = NULL;
   private $uBound = NULL;
   private $uBoundIn = NULL;
   private $allowFloat = TRUE;
-  private $emptyRange = FALSE;
+  private $emptyInterval = FALSE;
   
   function __construct($expression) {
-    $range = MathRange::compute($expression);
+    $interval = MathInterval::compute($expression);
 
     // Check for empty.
-    switch ($range) {
+    switch ($interval) {
       case ']0,0[':
          $this->allowFloat = FALSE;
       case ']0.0,0.0[':
-        // If compute returned an empty range initialize as such.
+        // If compute returned an empty interval initialize as such.
         return $this->setEmpty();
       break;
     }
 
     // Chop pieces. Validation was already done in compute().
-    preg_match('/^'.MATH_RANGE_REGEX.'$/', $range, $pieces);
+    preg_match('/^'.MATH_INTERVAL_REGEX.'$/', $interval, $pieces);
     list(, $lbound_in_ex, $lbound, $ubound, $ubound_in_ex) = $pieces;
     // Convert upper and lower bound to number by adding 0.
     $lbound += 0;
@@ -87,16 +87,16 @@ class MathRange {
   }
 
   static function compute($expression) {
-    if (preg_match('/^'.MATH_RANGE_REGEX.'$/', $expression, $pieces)) {
-      // Extracted range.
+    if (preg_match('/^'.MATH_INTERVAL_REGEX.'$/', $expression, $pieces)) {
+      // Extracted interval.
       list(, $lbound_in_ex, $lbound, $ubound, $ubound_in_ex) = $pieces;
       // Convert upper and lower bound to number by adding 0.
       $lbound += 0;
       $ubound += 0;
 
-      // Validate range.
+      // Validate interval.
       if ($lbound > $ubound) {
-        throw new MathRangeException("Lower bound must be lower than upper bound in $expression");
+        throw new MathIntervalException("Lower bound must be lower than upper bound in $expression");
       }
       elseif (($ubound > $lbound) || ($lbound == $ubound && $lbound_in_ex == '[' && $ubound_in_ex == ']')) { 
         // [1,1] is a valid range allowing only the number 1.
@@ -104,11 +104,11 @@ class MathRange {
       }
       else {
         // ]1,1], [1,1[ and ]1,1[ are all empty.
-        // Return as empty range .]0,0[ Accounting for floats.
+        // Return as empty interval .]0,0[ Accounting for floats.
         return (is_int($lbound) && is_int($ubound)) ? ']0,0[' : ']0.0,0.0[';
       }
     }
-    /*elseif (preg_match('/^'.MATH_RANGE_EXPRESSION_REGEX.'$/', $expression, $results)) {
+    /*elseif (preg_match('/^'.MATH_INTERVAL_EXPRESSION_REGEX.'$/', $expression, $results)) {
       // There are no atoms to extract.
       // Proceed to compute.
       $atom = $results[0];
@@ -116,7 +116,7 @@ class MathRange {
       
       // First element is always a range.
       // The regex already validated this.
-      $working_range = new MathRange(array_shift($ranges));
+      $working_range = new MathInterval(array_shift($ranges));
       $op = current($ranges);
       
       do {
@@ -133,14 +133,14 @@ class MathRange {
       
       return $working_range->__toString();
     }*/
-    /*elseif (preg_match('/'.MathRange::RANGE_EXP_ATOM_REGEX.'/', $expression, $atoms)) {
+    /*elseif (preg_match('/'.MATH_INTERVAL_EXP_ATOM_REGEX.'/', $expression, $atoms)) {
       // Extracted atom.
       $atom = $atoms[1];
       print "$atom\n";
       compute($atom);
     }*/
     else {
-      throw new MathRangeException("Invalid expression.");
+      throw new MathIntervalException("Invalid expression.");
     }
   }
 
@@ -149,7 +149,7 @@ class MathRange {
     $this->lBound = 0;
     $this->uBound = 0;
     $this->uBoundIn = FALSE;
-    $this->emptyRange = TRUE;
+    $this->emptyInterval = TRUE;
     
     return $this;
   }
@@ -171,7 +171,7 @@ class MathRange {
   }
   
   public function isEmpty() {
-    return $this->emptyRange;
+    return $this->emptyInterval;
   }
   
   public function allowFloats() {
@@ -179,12 +179,12 @@ class MathRange {
   }
   
   public function union($expression) {
-    $toJoin = new MathRange($expression);
+    $toJoin = new MathInterval($expression);
     
     // Handle float values.
     $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
     
-    // Handle empty ranges.
+    // Handle empty intervals.
     if ($toJoin->isEmpty()) {
       return $this;
     }
@@ -194,13 +194,13 @@ class MathRange {
       $this->lBound = $toJoin->getLowerBound();
       $this->uBound = $toJoin->getUpperBound();
       $this->uBoundIn = $toJoin->includeUpperBound();
-      // Allowing floats depends on both ranges. Do not copy this property.
+      // Allowing floats depends on both intervals. Do not copy this property.
       // $this->allowFloat = $toJoin->allowFloats();
-      $this->emptyRange = $toJoin->isEmpty();
+      $this->emptyInterval = $toJoin->isEmpty();
       return $this;
     }
     
-    // No empty ranges. Unite.
+    // No empty intervals. Unite.
     // Upper bound.
     if ($toJoin->getUpperBound() > $this->getUpperBound()) {
       // Since the upper bound of the expression to join is higher
@@ -215,7 +215,7 @@ class MathRange {
         $this->uBoundIn = TRUE;
       }
     }
-    // else the current rage stays as is.
+    // else the current interval stays as is.
     
     // Lower bound.
     if ($toJoin->getLowerBound() < $this->getLowerBound()) {
@@ -231,19 +231,19 @@ class MathRange {
         $this->lBoundIn = TRUE;
       }
     }
-    // else the current rage stays as is.
+    // else the current interval stays as is.
     
     return $this;
   }
 
   public function intersection($expression) {
-    $toJoin = new MathRange($expression);
+    $toJoin = new MathInterval($expression);
     
     // Handle float values.
     $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
 
-    // Handle empty ranges.
-    // Intersection with an empty range is always empty.
+    // Handle empty intervals.
+    // Intersection with an empty interval is always empty.
     if ($toJoin->isEmpty()) {
       return $this->setEmpty();
     }
@@ -251,7 +251,7 @@ class MathRange {
       return $this;
     }
 
-    // No empty ranges. Intersect.
+    // No empty intervals. Intersect.
     // Check if $this contains $toJoin;
     if ($this->getLowerBound() < $toJoin->getLowerBound() && $this->getUpperBound() > $toJoin->getUpperBound()) {
       // Copy $toJoin.
@@ -259,9 +259,9 @@ class MathRange {
       $this->lBound = $toJoin->getLowerBound();
       $this->uBound = $toJoin->getUpperBound();
       $this->uBoundIn = $toJoin->includeUpperBound();
-      // Allowing floats depends on both ranges. Do not copy this property.
+      // Allowing floats depends on both intervals. Do not copy this property.
       // $this->allowFloat = $toJoin->allowFloats();
-      $this->emptyRange = $toJoin->isEmpty();
+      $this->emptyInterval = $toJoin->isEmpty();
       return $this;
     }
     // Check if $toJoin contains $this;
@@ -269,7 +269,7 @@ class MathRange {
       return $this;
     }
     
-    // Find out which range comes first.
+    // Find out which interval comes first.
     if ($this->getLowerBound() <= $toJoin->getLowerBound() && $this->getUpperBound() <= $toJoin->getUpperBound()) {
       $first = $this;
       $second = $toJoin;
@@ -292,7 +292,7 @@ class MathRange {
     //           |
     //------------------------
     elseif ($first->getUpperBound() == $second->getLowerBound()) {
-      // The only possible option here is a range with only one value allowed
+      // The only possible option here is an interval with only one value allowed
       // like [1,1] but for that both bounds need to be included.
       if ($first->includeUpperBound() && $second->includeLowerBound()) {
         $this->lBoundIn = TRUE;
@@ -306,7 +306,7 @@ class MathRange {
         return $this->setEmpty();
       }
     }
-    // Case: (Ranges overlap. Account for inclusions.)
+    // Case: (Intervals overlap. Account for inclusions.)
     //   _____________
     //  |____________|         --> $second
     //  |            |         --> $first
@@ -317,7 +317,7 @@ class MathRange {
       $this->uBoundIn = $first->includeUpperBound() && $second->includeUpperBound();
       return $this;
     }
-    // Case: (Ranges overlap on lower.)
+    // Case: (Intervals overlap on lower.)
     //   __________________
     //  |_____________    |    --> $second
     //  |            |         --> $first
@@ -330,7 +330,7 @@ class MathRange {
       $this->uBoundIn = $first->includeUpperBound();
       return $this;
     }
-    // Case: (Ranges overlap on upper.)
+    // Case: (Intervals overlap on upper.)
     //   __________________
     //  |    _____________|    --> $first
     //      |            |     --> $second
@@ -360,4 +360,4 @@ class MathRange {
   }
 }
 
-class MathRangeException extends Exception { }
+class MathIntervalException extends Exception { }

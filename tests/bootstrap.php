@@ -1,3 +1,3 @@
 <?php
 
-require "src/MathRange.php";
+require "src/MathInterval.php";
