@@ -36,6 +36,48 @@ class MathRangeTest extends PHPUnit_Framework_TestCase {
     new MathRange('[-9,-10.2]');
   }
 
+  public function dataProviderCompute() {
+    return array(
+      // With simple ranges, there's nothing to simplify
+      // so the input is equal to the output.
+      array('[1,4]', '[1,4]'),
+      array('[1,4[', '[1,4['),
+      array(']1,4]', ']1,4]'),
+      array(']1,4[', ']1,4['),
+      
+      // Differently from what happens with the output of a
+      // MathRange object, when a range is valid is returned
+      // as is.
+      array('[1.0,4]', '[1.0,4]'),
+      array('[1.0,4[', '[1.0,4['),
+      array(']1.0,4]', ']1.0,4]'),
+      array(']1.0,4[', ']1.0,4['),
+      
+      // Empty ranges always evaluate to ]0.0[.
+      array('[1,1[', ']0,0['),
+      array(']1,1]', ']0,0['),
+      array(']1,1[', ']0,0['),
+      
+      array('[1.0,1[', ']0.0,0.0['),
+      array(']1.0,1]', ']0.0,0.0['),
+      array(']1.0,1[', ']0.0,0.0['),
+    );
+  }
+  
+  /**
+   * @dataProvider dataProviderCompute
+   */
+  public function testCompute($input, $output) {
+    // The compute function's only job is to simplify ranges to be
+    // handled by the constructor.
+    // It can be a recursive function if an expression with atoms is
+    // used.
+    // If along the way an invalid expression shows up throws an
+    // exception.
+    
+    $this->assertEquals($output, MathRange::compute($input));
+  }
+
   function dataProviderRange() {
     return array(
       // Ranges.
