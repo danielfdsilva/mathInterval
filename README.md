@@ -1,4 +1,6 @@
 # Math Intervals
+[![Build Status](https://travis-ci.org/danielfdsilva/mathInterval.svg?branch=master)](https://travis-ci.org/danielfdsilva/mathInterval)  
+
 This library lets you use mathematical intervals in php. Trust me, it's way cooler than it sounds :)
 
 Before using this library you should understand what intervals are and how to use them.
