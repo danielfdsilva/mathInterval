@@ -122,6 +122,43 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($expFloats, $r->allowFloats(), 'Range allows floats.');  
     $this->assertEquals($output, $r->__toString());
   }
+  
+  public function testInInterval() {
+    $interval = new MathInterval('[1,10]');
+    $this->assertFalse($interval->inInterval(11));
+    $this->assertFalse($interval->inInterval(5.5));
+    $this->assertFalse($interval->inInterval(-1));
+    $this->assertFalse($interval->inInterval('NaN'));
+    $this->assertFalse($interval->inInterval('x3'));
+    $this->assertTrue($interval->inInterval('5'));
+    $this->assertTrue($interval->inInterval(10));
+    $this->assertTrue($interval->inInterval(1));
+    $this->assertTrue($interval->inInterval(5));
+
+    $interval = new MathInterval('[1,10[');
+    $this->assertFalse($interval->inInterval(10));
+    $this->assertTrue($interval->inInterval(1));
+
+    $interval = new MathInterval(']1,10]');
+    $this->assertFalse($interval->inInterval(1));
+    $this->assertTrue($interval->inInterval(10));
+
+    $interval = new MathInterval(']1,10[');
+    $this->assertFalse($interval->inInterval(1));
+    $this->assertFalse($interval->inInterval(10));
+
+    $interval = new MathInterval('[1,1]');
+    $this->assertTrue($interval->inInterval(1));
+
+    $interval = new MathInterval(']0,0[');
+    $this->assertFalse($interval->inInterval(0));
+
+    $interval = new MathInterval('[1.5,10]');
+    $this->assertTrue($interval->inInterval(5.5));
+    $this->assertTrue($interval->inInterval('3.14159265'));
+    $this->assertTrue($interval->inInterval(M_PI));
+    $this->assertTrue($interval->inInterval(10));
+  }
 
   function dataProviderIntervalUnion() {
     return array(
@@ -196,6 +233,146 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array(']1,10[', '[3.14,4[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
       array(']1,10[', ']3.14,4]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
       array(']1,10[', ']3.14,4[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      
+      // Intervals overlap on lower bound.
+      // $interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array('[1,8]', '[1,5]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8]', '[1,5[', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8]', ']1,5]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8]', ']1,5[', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8[', '[1,5]', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array('[1,8[', '[1,5[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array('[1,8[', ']1,5]', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array('[1,8[', ']1,5[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,8]', '[1,5]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8]', '[1,5[', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8]', ']1,5]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8]', ']1,5[', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8[', '[1,5]', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,8[', '[1,5[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,8[', ']1,5]', ']1,8[', FALSE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,8[', ']1,5[', ']1,8[', FALSE, 1, 8, FALSE, FALSE, FALSE),
+
+      array('[1,5]', '[1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,5[', '[1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,5]', '[1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,5[', '[1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,5]', '[1,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array('[1,5[', '[1,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,5]', '[1,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,5[', '[1,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array('[1,5]', ']1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,5[', ']1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,5]', ']1,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,5[', ']1,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,5]', ']1,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array('[1,5[', ']1,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,5]', ']1,8[', ']1,8[', FALSE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,5[', ']1,8[', ']1,8[', FALSE, 1, 8, FALSE, FALSE, FALSE),
+
+      array('[1.0,8]', '[1,5]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8]', '[1,5[', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8]', ']1,5]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8]', ']1,5[', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8[', '[1,5]', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array('[1.0,8[', '[1,5[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array('[1.0,8[', ']1,5]', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array('[1.0,8[', ']1,5[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1.0,8]', '[1,5]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8]', '[1,5[', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8]', ']1,5]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8]', ']1,5[', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8[', '[1,5]', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1.0,8[', '[1,5[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1.0,8[', ']1,5]', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1.0,8[', ']1,5[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
+
+      array('[1,5]', '[1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1,5[', '[1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1,5]', '[1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1,5[', '[1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1,5]', '[1.0,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array('[1,5[', '[1.0,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1,5]', '[1.0,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1,5[', '[1.0,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array('[1,5]', ']1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1,5[', ']1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1,5]', ']1.0,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1,5[', ']1.0,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1,5]', ']1.0,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array('[1,5[', ']1.0,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1,5]', ']1.0,8[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1,5[', ']1.0,8[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
+
+      // Intervals overlap on upper bound.
+      // $interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array('[1,8]', '[3,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8]', '[3,8[', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8]', ']3,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8]', ']3,8[', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8[', '[3,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8[', '[3,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array('[1,8[', ']3,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[1,8[', ']3,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,8]', '[3,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8]', '[3,8[', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8]', ']3,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8]', ']3,8[', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8[', '[3,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8[', '[3,8[', ']1,8[', FALSE, 1, 8, FALSE, FALSE, FALSE),
+      array(']1,8[', ']3,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']1,8[', ']3,8[', ']1,8[', FALSE, 1, 8, FALSE, FALSE, FALSE),
+
+      array('[3,8]', '[1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[3,8[', '[1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array(']3,8]', '[1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array(']3,8[', '[1,8]', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[3,8]', '[1,8[', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array('[3,8[', '[1,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array(']3,8]', '[1,8[', '[1,8]', TRUE, 1, 8, TRUE, FALSE, FALSE),
+      array(']3,8[', '[1,8[', '[1,8[', TRUE, 1, 8, FALSE, FALSE, FALSE),
+      array('[3,8]', ']1,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array('[3,8[', ']1,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']3,8]', ']1,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']3,8[', ']1,8]', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array('[3,8]', ']1,8[', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array('[3,8[', ']1,8[', ']1,8[', FALSE, 1, 8, FALSE, FALSE, FALSE),
+      array(']3,8]', ']1,8[', ']1,8]', FALSE, 1, 8, TRUE, FALSE, FALSE),
+      array(']3,8[', ']1,8[', ']1,8[', FALSE, 1, 8, FALSE, FALSE, FALSE),
+
+      array('[1.0,8]', '[3,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8]', '[3,8[', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8]', ']3,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8]', ']3,8[', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8[', '[3,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8[', '[3,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array('[1.0,8[', ']3,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[1.0,8[', ']3,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1.0,8]', '[3,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8]', '[3,8[', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8]', ']3,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8]', ']3,8[', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8[', '[3,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8[', '[3,8[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
+      array(']1.0,8[', ']3,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']1.0,8[', ']3,8[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
+
+      array('[3,8]', '[1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[3,8[', '[1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array(']3,8]', '[1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array(']3,8[', '[1.0,8]', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[3,8]', '[1.0,8[', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array('[3,8[', '[1.0,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array(']3,8]', '[1.0,8[', '[1.0,8.0]', TRUE, 1, 8, TRUE, FALSE, TRUE),
+      array(']3,8[', '[1.0,8[', '[1.0,8.0[', TRUE, 1, 8, FALSE, FALSE, TRUE),
+      array('[3,8]', ']1.0,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array('[3,8[', ']1.0,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']3,8]', ']1.0,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']3,8[', ']1.0,8]', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array('[3,8]', ']1.0,8[', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array('[3,8[', ']1.0,8[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
+      array(']3,8]', ']1.0,8[', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
+      array(']3,8[', ']1.0,8[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
 
       // A union will never results in empty interval unless two empty intervals
       // are united.

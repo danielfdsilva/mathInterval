@@ -1,4 +1,12 @@
 <?php
+/**
+ * @file MathInterval.php
+ * Contains the MathInterval Library.
+ * 
+ * @author Daniel da Silva
+ * @package MathInterval
+ * @version 1.0.0
+ */
 
 // In class constants you can't define constants with concatenation
 // because of reasons.
@@ -9,15 +17,80 @@ define('MATH_INTERVAL_EXPRESSION_REGEX', MATH_INTERVAL_REGEX . '(?: (?:or|and) '
 // Match: ([1,2] or [3,4]).
 define('MATH_INTERVAL_EXP_ATOM_REGEX', '\(('.MATH_INTERVAL_EXPRESSION_REGEX.'\)');
 
+/**
+ * Library to use Mathematical Intervals.
+ * 
+ * Allows the creation of an interval and the validation
+ * of values against said interval.
+ * It is also possible to perform the union and intersection of
+ * different intervals.
+ */
 class MathInterval {
 
+  /**
+   * MathInterval version.
+   */
+   const VERSION = '1.0.0';
+
+  /**
+   * Whether the beginning of the interval is closed.
+   * @var boolean
+   * @access private
+   */
   private $lBoundIn = NULL;
+
+  /**
+   * The value for the lower bound of the interval
+   * @var int
+   * @access private
+   */
   private $lBound = NULL;
+
+  /**
+   * The value for the upper bound of the interval
+   * @var int
+   * @access private
+   */
   private $uBound = NULL;
+
+  /**
+   * Whether the ending of the interval is closed.
+   * @var boolean
+   * @access private
+   */
   private $uBoundIn = NULL;
+
+  /**
+   * Whether the interval allows float values.
+   * Default to TRUE
+   * @var boolean
+   * @access private
+   */
   private $allowFloat = TRUE;
+
+  /**
+   * Whether the interval is empty. In this case the interval will
+   * assume ]0,0[
+   * @var boolean
+   * @access private
+   */
   private $emptyInterval = FALSE;
-  
+
+  /**
+   * MathInterval constructor.
+   * Computes a mathematical range from the provided expression.
+   * 
+   * @uses MathInterval::compute($expression)
+   * 
+   * @param string $expression
+   *   The interval to compute.
+   * 
+   * @throws MathIntervalException
+   *   - If the provided expression is invalid.
+   *   - If the lower bound of the interval is higher then its upper bound.
+   * 
+   * @return MathInterval
+   */
   function __construct($expression) {
     $interval = MathInterval::compute($expression);
 
@@ -46,6 +119,13 @@ class MathInterval {
     $this->allowFloat = !(is_int($lbound) && is_int($ubound));
   }
 
+  /**
+   * Provides a string representation of the interval that can be used
+   * to initialize a new MathInterval.
+   * 
+   * @return string
+   *   The string representation of the interval.
+   */
   function __toString() {
     if ($this->isEmpty()) {
       if ($this->allowFloats()) {
@@ -86,6 +166,22 @@ class MathInterval {
     return $out;
   }
 
+  /**
+   * Simplifies a provided expression and validates it.
+   * If the provided expression turns out to be an empty interval
+   * ]0,0[ or ]0.0,0.0[ will be returned.
+   * @access static
+   * 
+   * @param string $expression
+   *   The interval to compute.
+   * 
+   * @throws MathIntervalException
+   *   - If the provided expression is invalid.
+   *   - If the lower bound of the interval is higher then its upper bound.
+   * 
+   * @return String
+   *   The string representation of the interval.
+   */
   static function compute($expression) {
     if (preg_match('/^'.MATH_INTERVAL_REGEX.'$/', $expression, $pieces)) {
       // Extracted interval.
@@ -144,46 +240,129 @@ class MathInterval {
     }
   }
 
-  private function setEmpty() {
-    $this->lBoundIn = FALSE;
-    $this->lBound = 0;
-    $this->uBound = 0;
-    $this->uBoundIn = FALSE;
-    $this->emptyInterval = TRUE;
-    
-    return $this;
+  /**
+   * Check whether a given value fits within the interval.
+   * @access public
+   * 
+   * @param int $value
+   *   The value to validate
+   * 
+   * @return Boolean
+   *   The result of the validation.
+   */
+  public function inInterval($value) {
+    if (!is_numeric($value)) {
+      return FALSE;
+    }
+    else if ($this->isEmpty()) {
+      return FALSE;
+    }
+    else if (!$this->allowFloats() && is_double($value)) {
+      return FALSE;
+    }
+    else if ($this->includeLowerBound() && $value < $this->getLowerBound()) {
+      return FALSE;
+    }
+    else if (!$this->includeLowerBound() && $value <= $this->getLowerBound()) {
+      return FALSE;
+    }
+    else if ($this->includeUpperBound() && $value > $this->getUpperBound()) {
+      return FALSE;
+    }
+    else if (!$this->includeUpperBound() && $value >= $this->getUpperBound()) {
+      return FALSE;
+    }
+    else {
+      return TRUE;
+    }
   }
-  
+
+  /**
+   * Returns the value for the interval's upper bound.
+   * @access public
+   * 
+   * @return int
+   *   The value for the interval's upper bound.
+   */
   public function getUpperBound() {
     return $this->uBound;
   }
-  
+
+  /**
+   * Returns the value for the interval's lower bound.
+   * @access public
+   * 
+   * @return int
+   *   The value for the interval's lower bound.
+   */
   public function getLowerBound() {
     return $this->lBound;
   }
-  
+
+  /**
+   * Check whether the beginning of the interval is closed.
+   * @access public
+   * 
+   * @return Boolean
+   *   Whether the beginning of the interval is closed.
+   */
   public function includeLowerBound() {
     return $this->lBoundIn;
   }
-  
+
+  /**
+   * Check whether the ending of the interval is closed.
+   * @access public
+   * 
+   * @return Boolean
+   *   Whether the ending of the interval is closed.
+   */
   public function includeUpperBound() {
     return $this->uBoundIn;
   }
-  
+
+  /**
+   * Check whether the interval is empty.
+   * @access public
+   * 
+   * @return Boolean
+   *   Whether the interval is empty.
+   */
   public function isEmpty() {
     return $this->emptyInterval;
   }
-  
+
+  /**
+   * Check whether the interval allows floating values.
+   * @access public
+   * 
+   * @return Boolean
+   *   Whether the interval allows floating values.
+   */
   public function allowFloats() {
     return $this->allowFloat;
   }
-  
+
+  /**
+   * Computes the union of this interval with a given one.
+   * @access public
+   * 
+   * @param string $expression
+   *   The interval to unite.
+   * 
+   * @throws MathIntervalException
+   *   - If the provided expression is invalid.
+   *   - If the lower bound of the interval is higher then its upper bound.
+   * 
+   * @return MathInterval
+   *   The updated interval.
+   */
   public function union($expression) {
     $toJoin = new MathInterval($expression);
-    
+
     // Handle float values.
     $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
-    
+
     // Handle empty intervals.
     if ($toJoin->isEmpty()) {
       return $this;
@@ -199,7 +378,7 @@ class MathInterval {
       $this->emptyInterval = $toJoin->isEmpty();
       return $this;
     }
-    
+
     // No empty intervals. Unite.
     // Upper bound.
     if ($toJoin->getUpperBound() > $this->getUpperBound()) {
@@ -216,7 +395,7 @@ class MathInterval {
       }
     }
     // else the current interval stays as is.
-    
+
     // Lower bound.
     if ($toJoin->getLowerBound() < $this->getLowerBound()) {
       // Since the lower bound of the expression to join is lower
@@ -232,10 +411,24 @@ class MathInterval {
       }
     }
     // else the current interval stays as is.
-    
+
     return $this;
   }
 
+  /**
+   * Computes the intersection of this interval with a given one.
+   * @access public
+   * 
+   * @param string $expression
+   *   The interval to intersect.
+   * 
+   * @throws MathIntervalException
+   *   - If the provided expression is invalid.
+   *   - If the lower bound of the interval is higher then its upper bound.
+   * 
+   * @return MathInterval
+   *   The updated interval.
+   */
   public function intersection($expression) {
     $toJoin = new MathInterval($expression);
     
@@ -358,6 +551,25 @@ class MathInterval {
       return $this;
     }
   }
+
+  /**
+   * Sets an interval as empty.
+   * @access private
+   * 
+   * @return MathInterval
+   *   Self to allow chaining.
+   */
+  private function setEmpty() {
+    $this->lBoundIn = FALSE;
+    $this->lBound = 0;
+    $this->uBound = 0;
+    $this->uBoundIn = FALSE;
+    $this->emptyInterval = TRUE;
+    return $this;
+  }
 }
 
+/**
+ * Exception class used by MathInterval.
+ */
 class MathIntervalException extends Exception { }
