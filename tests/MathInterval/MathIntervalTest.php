@@ -9,11 +9,17 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array('1,2'),
       array('[1,2] or 3'),
 
-      // The function contructor relies on copmute().
-      // That function can be testes through this.
+      // The function contructor relies on compute().
+      // That function can be tested through this.
       array('[1,2] orq [3,4]'),
       array('[1,2] adn [3,4]'),
-      array('[1,2] or [3,5] and, [3,1]'),
+      array('[1,2] or [3,5] and, [3,10]'),
+
+      // Test expressions with parenthesis.
+      array('[1,2] or [3,5] and ()[3,10])'),
+      array('[1,2] or [3,5] and (((([3,10])))'),
+      array('(([1,2] or (([3,5]) and [3,10]))'),
+      array('([1,2] or ([3,5] and) [3,10])'),
     );
   }
 
@@ -87,6 +93,15 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array('[3,9] or [10,15] and [1,5]', '[3,5]'),
       array('[3,9] or [9,15] and [15,20]', '[15,15]'),
       array('[3,9] or [9,15] and ]15,20]', ']0,0['),
+
+      // Test expressions with parenthesis.
+      array('([1,5])', '[1,5]'),
+      array('(([1,5]))', '[1,5]'),
+      array('[1,5] and ([3,9] or [10,15])', '[3,5]'),
+      array('[3,9] or ([10,15] and ([1,5]))', '[3,9]'),
+      array('([3,9] or ([9,15] and ([15,20])))', '[3,15]'),
+      array('(([3,9[) and [9,15]) and ]15,20]', ']0,0['),
+      array('([1,5] and [3,4]) and ([1,10] or ([1,5] and [3,4]))', '[3,4]'),
     );
   }
   

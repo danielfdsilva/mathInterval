@@ -5,7 +5,7 @@
  * 
  * @author Daniel da Silva
  * @package MathInterval
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 // In class constants you can't define constants with concatenation
@@ -15,7 +15,7 @@ define('MATH_INTERVAL_REGEX', '(\[|\])(-?[0-9]+(?:\.?[0-9]+)?),(-?[0-9]+(?:\.?[0
 // Match: [1,2] or [3,4] and [5,6].
 define('MATH_INTERVAL_EXPRESSION_REGEX', MATH_INTERVAL_REGEX . '(?: (?:or|and) '.MATH_INTERVAL_REGEX.')*');
 // Match: ([1,2] or [3,4]).
-define('MATH_INTERVAL_EXP_ATOM_REGEX', '\(('.MATH_INTERVAL_EXPRESSION_REGEX.'\)');
+define('MATH_INTERVAL_EXP_ATOM_REGEX', '\(('.MATH_INTERVAL_EXPRESSION_REGEX.')\)');
 
 /**
  * Library to use Mathematical Intervals.
@@ -30,7 +30,7 @@ class MathInterval {
   /**
    * MathInterval version.
    */
-   const VERSION = '1.0.0';
+   const VERSION = '1.1.0';
 
   /**
    * Whether the beginning of the interval is closed.
@@ -229,12 +229,17 @@ class MathInterval {
       
       return $working_range->__toString();
     }
-    /*elseif (preg_match('/'.MATH_INTERVAL_EXP_ATOM_REGEX.'/', $expression, $atoms)) {
+    elseif (preg_match('/'.MATH_INTERVAL_EXP_ATOM_REGEX.'/', $expression, $atoms)) {
       // Extracted atom.
-      $atom = $atoms[1];
-      print "$atom\n";
-      compute($atom);
-    }*/
+      // $atoms[0] contains the expression with parenthesis.
+      // $atoms[1] contains the expression without parenthesis.
+      $simplified = MathInterval::compute($atoms[1]);
+      // Replace the atom with the simplified expression.
+      // If multiple matches are found all will be replaced.
+      $expression = str_replace($atoms[0], $simplified, $expression);
+      // Run the compute again with the new expression.
+      return MathInterval::compute($expression);
+    }
     else {
       throw new MathIntervalException("Invalid expression.");
     }

@@ -66,7 +66,7 @@ print $interval; // [17,20]
 ```
 
 ### Expressions
-MathInterval also allows you to use expressions to initialize and compute intervals. The official symbols for intersections and union are ∩ and ⋃. However, since these symbols are hard to type on a computer MathInterval uses ```and``` and ```or```.
+MathInterval also allows you to use expressions to initialize and compute intervals. The official symbols for intersections and union are ∩ and ⋃. However, since these symbols are hard to type MathInterval uses ```and``` and ```or```.
 
 For example:
 ```php
@@ -78,14 +78,15 @@ print $interval; // [5,25]
 $interval = new MathInterval('[5,20] and [10,25]');
 print $interval; // [20,25]
 
-// You can chain as many values as needed in the expression:
+// You can chain as many values as needed in an expression:
 // [5,20] ∩ [10,25] ⋃ [15,30[
 $interval = new MathInterval('[5,20] and [10,25] or [15,30[');
 print $interval; // [10,30[
 
-// Also note that you can use these expressions in the union() and intersection() methods.
+// You can also use these expressions in the union() and intersection() methods.
 ```
-> Note that like many mathematical expressions, the order of operators matters.
+> Note that like in mathematical expressions the order of operators matters and as in mathematics you can use parenthesis.  
+For example: ```[5,20] ∩ ([10,25] ⋃ [15,30[)``` = ```[5,20] ∩ [10,30[``` = ```[10,20]```
 
 -----
 
