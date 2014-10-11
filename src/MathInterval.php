@@ -204,7 +204,7 @@ class MathInterval {
         return (is_int($lbound) && is_int($ubound)) ? ']0,0[' : ']0.0,0.0[';
       }
     }
-    /*elseif (preg_match('/^'.MATH_INTERVAL_EXPRESSION_REGEX.'$/', $expression, $results)) {
+    elseif (preg_match('/^'.MATH_INTERVAL_EXPRESSION_REGEX.'$/', $expression, $results)) {
       // There are no atoms to extract.
       // Proceed to compute.
       $atom = $results[0];
@@ -228,7 +228,7 @@ class MathInterval {
       while ($op = next($ranges));
       
       return $working_range->__toString();
-    }*/
+    }
     /*elseif (preg_match('/'.MATH_INTERVAL_EXP_ATOM_REGEX.'/', $expression, $atoms)) {
       // Extracted atom.
       $atom = $atoms[1];

@@ -8,6 +8,12 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array('(1,2)'),
       array('1,2'),
       array('[1,2] or 3'),
+
+      // The function contructor relies on copmute().
+      // That function can be testes through this.
+      array('[1,2] orq [3,4]'),
+      array('[1,2] adn [3,4]'),
+      array('[1,2] or [3,5] and, [3,1]'),
     );
   }
 
@@ -61,6 +67,26 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array('[1.0,1[', ']0.0,0.0['),
       array(']1.0,1]', ']0.0,0.0['),
       array(']1.0,1[', ']0.0,0.0['),
+
+
+      // The other tests will test the union and intersection methods
+      // exhaustively. Here we only test if the expected results are
+      // correct since the used methods are common.
+      array('[1,5] or [3,9]', '[1,9]'),
+      array('[3,9] or [1,5]', '[1,9]'),
+      array('[3,9] or [1,5] or [10,13]', '[1,13]'),
+      array('[3,9] or [1,5] or [10,13] or ]1,2[', '[1,13]'),
+      array('[3,9] or [1,5] or [10,13] or ]0,0[', '[1,13]'),
+
+      array('[1,5] and [3,9]', '[3,5]'),
+      array('[1,50] and [3,45] and ]40,41]', ']40,41]'),
+      array('[1,50] and [3,45] and ]0,0[', ']0,0['),
+
+      // With union and intersection order is very important.
+      array('[1,5] and [3,9] or [10,15]', '[3,15]'),
+      array('[3,9] or [10,15] and [1,5]', '[3,5]'),
+      array('[3,9] or [9,15] and [15,20]', '[15,15]'),
+      array('[3,9] or [9,15] and ]15,20]', ']0,0['),
     );
   }
   
