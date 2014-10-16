@@ -44,6 +44,8 @@ $interval->inInterval(15.25); // TRUE
 ```
 
 ### Union
+> **BUG**: The union method is broken. Do not use. See [issue #4](https://github.com/danielfdsilva/mathInterval/issues/4)
+
 ```php
 // Create your first interval.
 $interval = new MathInterval('[5,20]');
@@ -72,6 +74,8 @@ print $interval; // [17,20]
 MathInterval also allows you to use expressions to initialize and compute intervals. The official symbols for intersections and union are ∩ and ⋃, but, since these are hard to type, MathInterval uses ```and``` and ```or```.
 
 For example:
+> **BUG**: The union method is broken. Do not use (or) in the expression. See [issue #4](https://github.com/danielfdsilva/mathInterval/issues/4)
+
 ```php
 // [5,20] ⋃ [10,25]
 $interval = new MathInterval('[5,20] or [10,25]');
