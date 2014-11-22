@@ -48,77 +48,6 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
     new MathInterval('[-9,-10.2]');
   }
 
-  public function dataProviderCompute() {
-    return array(
-      // With simple intervals, there's nothing to simplify
-      // so the input is equal to the output.
-      array('[1,4]', '[1,4]'),
-      array('[1,4[', '[1,4['),
-      array(']1,4]', ']1,4]'),
-      array(']1,4[', ']1,4['),
-      
-      // Differently from what happens with the output of a
-      // MathInterval object, when an interval is valid is returned
-      // as is.
-      array('[1.0,4]', '[1.0,4]'),
-      array('[1.0,4[', '[1.0,4['),
-      array(']1.0,4]', ']1.0,4]'),
-      array(']1.0,4[', ']1.0,4['),
-      
-      // Empty intervals always evaluate to ]0.0[.
-      array('[1,1[', ']0,0['),
-      array(']1,1]', ']0,0['),
-      array(']1,1[', ']0,0['),
-      
-      array('[1.0,1[', ']0.0,0.0['),
-      array(']1.0,1]', ']0.0,0.0['),
-      array(']1.0,1[', ']0.0,0.0['),
-
-
-      // The other tests will test the union and intersection methods
-      // exhaustively. Here we only test if the expected results are
-      // correct since the used methods are common.
-      array('[1,5] or [3,9]', '[1,9]'),
-      array('[3,9] or [1,5]', '[1,9]'),
-      array('[3,9] or [1,5] or [10,13]', '[1,13]'),
-      array('[3,9] or [1,5] or [10,13] or ]1,2[', '[1,13]'),
-      array('[3,9] or [1,5] or [10,13] or ]0,0[', '[1,13]'),
-
-      array('[1,5] and [3,9]', '[3,5]'),
-      array('[1,50] and [3,45] and ]40,41]', ']40,41]'),
-      array('[1,50] and [3,45] and ]0,0[', ']0,0['),
-
-      // With union and intersection order is very important.
-      array('[1,5] and [3,9] or [10,15]', '[3,15]'),
-      array('[3,9] or [10,15] and [1,5]', '[3,5]'),
-      array('[3,9] or [9,15] and [15,20]', '[15,15]'),
-      array('[3,9] or [9,15] and ]15,20]', ']0,0['),
-
-      // Test expressions with parenthesis.
-      array('([1,5])', '[1,5]'),
-      array('(([1,5]))', '[1,5]'),
-      array('[1,5] and ([3,9] or [10,15])', '[3,5]'),
-      array('[3,9] or ([10,15] and ([1,5]))', '[3,9]'),
-      array('([3,9] or ([9,15] and ([15,20])))', '[3,15]'),
-      array('(([3,9[) and [9,15]) and ]15,20]', ']0,0['),
-      array('([1,5] and [3,4]) and ([1,10] or ([1,5] and [3,4]))', '[3,4]'),
-    );
-  }
-  
-  /**
-   * @dataProvider dataProviderCompute
-   */
-  public function testCompute($input, $output) {
-    // The compute function's only job is to simplify intervals to be
-    // handled by the constructor.
-    // It can be a recursive function if an expression with atoms is
-    // used.
-    // If along the way an invalid expression shows up throws an
-    // exception.
-    
-    $this->assertEquals($output, MathInterval::compute($input));
-  }
-
   function dataProviderInterval() {
     return array(
       // Intervals.
@@ -203,24 +132,43 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
 
   function dataProviderIntervalUnion() {
     return array(
+      // Intervals with equal values but different inclusions.
       // $interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
-      array('[1,2]', '[3,4]', '[1,4]', TRUE, 1, 4, TRUE, FALSE, FALSE),
-      array('[1,2]', '[3,4[', '[1,4[', TRUE, 1, 4, FALSE, FALSE, FALSE),
-      array('[1,2]', ']3,4]', '[1,4]', TRUE, 1, 4, TRUE, FALSE, FALSE),
-      array('[1,2]', ']3,4[', '[1,4[', TRUE, 1, 4, FALSE, FALSE, FALSE),
-      array('[1,2[', '[3,4]', '[1,4]', TRUE, 1, 4, TRUE, FALSE, FALSE),
-      array('[1,2[', '[3,4[', '[1,4[', TRUE, 1, 4, FALSE, FALSE, FALSE),
-      array('[1,2[', ']3,4]', '[1,4]', TRUE, 1, 4, TRUE, FALSE, FALSE),
-      array('[1,2[', ']3,4[', '[1,4[', TRUE, 1, 4, FALSE, FALSE, FALSE),
-      array(']1,2]', '[3,4]', ']1,4]', FALSE, 1, 4, TRUE, FALSE, FALSE),
-      array(']1,2]', '[3,4[', ']1,4[', FALSE, 1, 4, FALSE, FALSE, FALSE),
-      array(']1,2]', ']3,4]', ']1,4]', FALSE, 1, 4, TRUE, FALSE, FALSE),
-      array(']1,2]', ']3,4[', ']1,4[', FALSE, 1, 4, FALSE, FALSE, FALSE),
-      array(']1,2[', '[3,4]', ']1,4]', FALSE, 1, 4, TRUE, FALSE, FALSE),
-      array(']1,2[', '[3,4[', ']1,4[', FALSE, 1, 4, FALSE, FALSE, FALSE),
-      array(']1,2[', ']3,4]', ']1,4]', FALSE, 1, 4, TRUE, FALSE, FALSE),
-      array(']1,2[', ']3,4[', ']1,4[', FALSE, 1, 4, FALSE, FALSE, FALSE),
+      array('[1,10]', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10]', '[1,10[', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10]', ']1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10]', ']1,10[', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10[', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10[', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[1,10[', ']1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[1,10[', ']1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10]', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10]', '[1,10[', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10]', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10]', ']1,10[', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10[', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10[', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array(']1,10[', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']1,10[', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      
+      array('[1,10.0]', '[1,10]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10.0]', '[1,10[', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10.0]', ']1,10]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10.0]', ']1,10[', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10.0[', '[1,10]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10.0[', '[1,10[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array('[1,10.0[', ']1,10]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array('[1,10.0[', ']1,10[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10.0]', '[1,10]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10.0]', '[1,10[', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10.0]', ']1,10]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10.0]', ']1,10[', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10.0[', '[1,10]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10.0[', '[1,10[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      array(']1,10.0[', ']1,10]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
+      array(']1,10.0[', ']1,10[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
 
+      // $interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
       // Cases where an interval fits inside another.
       array('[1,10]', '[3,4]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
       array('[1,10]', '[3,4[', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
@@ -246,16 +194,18 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array('[1,3.14]', ']3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
       array('[1,3.14[', '[3.14,4]', '[1.0,4.0]', TRUE, 1, 4, TRUE, FALSE, TRUE),
       array('[1,3.14[', '[3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
-      array('[1,3.14[', ']3.14,4]', '[1.0,4.0]', TRUE, 1, 4, TRUE, FALSE, TRUE),
-      array('[1,3.14[', ']3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
+      // testIntervalFalseUnion
+      //array('[1,3.14[', ']3.14,4]', '[1.0,4.0]', TRUE, 1, 4, TRUE, FALSE, TRUE),
+      //array('[1,3.14[', ']3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
       array(']1,3.14]', '[3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
       array(']1,3.14]', '[3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
       array(']1,3.14]', ']3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
       array(']1,3.14]', ']3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
       array(']1,3.14[', '[3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
       array(']1,3.14[', '[3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
-      array(']1,3.14[', ']3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
-      array(']1,3.14[', ']3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
+      // testIntervalFalseUnion
+      //array(']1,3.14[', ']3.14,4]', ']1.0,4.0]', FALSE, 1, 4, TRUE, FALSE, TRUE),
+      //array(']1,3.14[', ']3.14,4[', ']1.0,4.0[', FALSE, 1, 4, FALSE, FALSE, TRUE),
 
       // Cases where an interval fits inside another.
       array('[1,10]', '[3.14,4]', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
@@ -264,16 +214,18 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array('[1,10]', ']3.14,4[', '[1.0,10.0]', TRUE, 1, 10, TRUE, FALSE, TRUE),
       array('[1,10[', '[3.14,4]', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
       array('[1,10[', '[3.14,4[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
-      array('[1,10[', ']3.14,4]', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
-      array('[1,10[', ']3.14,4[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      // testIntervalFalseUnion
+      //array('[1,10[', ']3.14,4]', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
+      //array('[1,10[', ']3.14,4[', '[1.0,10.0[', TRUE, 1, 10, FALSE, FALSE, TRUE),
       array(']1,10]', '[3.14,4]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
       array(']1,10]', '[3.14,4[', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
       array(']1,10]', ']3.14,4]', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
       array(']1,10]', ']3.14,4[', ']1.0,10.0]', FALSE, 1, 10, TRUE, FALSE, TRUE),
       array(']1,10[', '[3.14,4]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
       array(']1,10[', '[3.14,4[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
-      array(']1,10[', ']3.14,4]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
-      array(']1,10[', ']3.14,4[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      // testIntervalFalseUnion
+      //array(']1,10[', ']3.14,4]', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
+      //array(']1,10[', ']3.14,4[', ']1.0,10.0[', FALSE, 1, 10, FALSE, FALSE, TRUE),
       
       // Intervals overlap on lower bound.
       // $interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
@@ -414,6 +366,86 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array('[3,8[', ']1.0,8[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
       array(']3,8]', ']1.0,8[', ']1.0,8.0]', FALSE, 1, 8, TRUE, FALSE, TRUE),
       array(']3,8[', ']1.0,8[', ']1.0,8.0[', FALSE, 1, 8, FALSE, FALSE, TRUE),
+      
+      array('[1,3]', '[3,6]', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
+      array('[1,3]', '[3,6[', '[1,6[', TRUE, 1, 6, FALSE, FALSE, FALSE),
+      array('[1,3]', ']3,6]', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
+      array('[1,3]', ']3,6[', '[1,6[', TRUE, 1, 6, FALSE, FALSE, FALSE),
+      array('[1,3[', '[3,6]', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
+      array('[1,3[', '[3,6[', '[1,6[', TRUE, 1, 6, FALSE, FALSE, FALSE),
+      // testIntervalFalseUnion
+      //array('[1,3[', ']3,6]', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
+      //array('[1,3[', ']3,6[', '[1,6[', TRUE, 1, 6, FALSE, FALSE, FALSE),
+      array(']1,3]', '[3,6]', ']1,6]', FALSE, 1, 6, TRUE, FALSE, FALSE),
+      array(']1,3]', '[3,6[', ']1,6[', FALSE, 1, 6, FALSE, FALSE, FALSE),
+      array(']1,3]', ']3,6]', ']1,6]', FALSE, 1, 6, TRUE, FALSE, FALSE),
+      array(']1,3]', ']3,6[', ']1,6[', FALSE, 1, 6, FALSE, FALSE, FALSE),
+      array(']1,3[', '[3,6]', ']1,6]', FALSE, 1, 6, TRUE, FALSE, FALSE),
+      array(']1,3[', '[3,6[', ']1,6[', FALSE, 1, 6, FALSE, FALSE, FALSE),
+      // testIntervalFalseUnion
+      //array(']1,3[', ']3,6]', ']1,6]', FALSE, 1, 6, TRUE, FALSE, FALSE),
+      //array(']1,3[', ']3,6[', ']1,6[', FALSE, 1, 6, FALSE, FALSE, FALSE),
+      
+      array('[3,6]', '[1,3]', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
+      array('[3,6[', '[1,3]', '[1,6[', TRUE, 1, 6, FALSE, FALSE, FALSE),
+      array(']3,6]', '[1,3]', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
+      array(']3,6[', '[1,3]', '[1,6[', TRUE, 1, 6, FALSE, FALSE, FALSE),
+      array('[3,6]', '[1,3[', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
+      array('[3,6[', '[1,3[', '[1,6[', TRUE, 1, 6, FALSE, FALSE, FALSE),
+      // testIntervalFalseUnion
+      //array(']3,6]', '[1,3[', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
+      //array(']3,6[', '[1,3[', '[1,6[', TRUE, 1, 6, FALSE, FALSE, FALSE),
+      array('[3,6]', ']1,3]', ']1,6]', FALSE, 1, 6, TRUE, FALSE, FALSE),
+      array('[3,6[', ']1,3]', ']1,6[', FALSE, 1, 6, FALSE, FALSE, FALSE),
+      array(']3,6]', ']1,3]', ']1,6]', FALSE, 1, 6, TRUE, FALSE, FALSE),
+      array(']3,6[', ']1,3]', ']1,6[', FALSE, 1, 6, FALSE, FALSE, FALSE),
+      array('[3,6]', ']1,3[', ']1,6]', FALSE, 1, 6, TRUE, FALSE, FALSE),
+      array('[3,6[', ']1,3[', ']1,6[', FALSE, 1, 6, FALSE, FALSE, FALSE),
+      // testIntervalFalseUnion
+      //array(']3,6]', ']1,3[', ']1,6]', FALSE, 1, 6, TRUE, FALSE, FALSE),
+      //array(']3,6[', ']1,3[', ']1,6[', FALSE, 1, 6, FALSE, FALSE, FALSE),
+      
+      array('[1,3.0]', '[3,6]', '[1.0,6.0]', TRUE, 1, 6, TRUE, FALSE, TRUE),
+      array('[1,3.0]', '[3,6[', '[1.0,6.0[', TRUE, 1, 6, FALSE, FALSE, TRUE),
+      array('[1,3.0]', ']3,6]', '[1.0,6.0]', TRUE, 1, 6, TRUE, FALSE, TRUE),
+      array('[1,3.0]', ']3,6[', '[1.0,6.0[', TRUE, 1, 6, FALSE, FALSE, TRUE),
+      array('[1,3.0[', '[3,6]', '[1.0,6.0]', TRUE, 1, 6, TRUE, FALSE, TRUE),
+      array('[1,3.0[', '[3,6[', '[1.0,6.0[', TRUE, 1, 6, FALSE, FALSE, TRUE),
+      // testIntervalFalseUnion
+      //array('[1,3[', ']3,6]', '[1.0,6.0]', TRUE, 1, 6, TRUE, FALSE, TRUE),
+      //array('[1,3[', ']3,6[', '[1.0,6.0[', TRUE, 1, 6, FALSE, FALSE, TRUE),
+      array(']1,3.0]', '[3,6]', ']1.0,6.0]', FALSE, 1, 6, TRUE, FALSE, TRUE),
+      array(']1,3.0]', '[3,6[', ']1.0,6.0[', FALSE, 1, 6, FALSE, FALSE, TRUE),
+      array(']1,3.0]', ']3,6]', ']1.0,6.0]', FALSE, 1, 6, TRUE, FALSE, TRUE),
+      array(']1,3.0]', ']3,6[', ']1.0,6.0[', FALSE, 1, 6, FALSE, FALSE, TRUE),
+      array(']1,3.0[', '[3,6]', ']1.0,6.0]', FALSE, 1, 6, TRUE, FALSE, TRUE),
+      array(']1,3.0[', '[3,6[', ']1.0,6.0[', FALSE, 1, 6, FALSE, FALSE, TRUE),
+      // testIntervalFalseUnion
+      //array(']1,3.0[', ']3,6]', ']1.0,6.0]', FALSE, 1, 6, TRUE, FALSE, TRUE),
+      //array(']1,3.0[', ']3,6[', ']1.0,6.0[', FALSE, 1, 6, FALSE, FALSE, TRUE),
+      
+      array('[3,6]', '[1,3.0]', '[1.0,6.0]', TRUE, 1, 6, TRUE, FALSE, TRUE),
+      array('[3,6[', '[1,3.0]', '[1.0,6.0[', TRUE, 1, 6, FALSE, FALSE, TRUE),
+      array(']3,6]', '[1,3.0]', '[1.0,6.0]', TRUE, 1, 6, TRUE, FALSE, TRUE),
+      array(']3,6[', '[1,3.0]', '[1.0,6.0[', TRUE, 1, 6, FALSE, FALSE, TRUE),
+      array('[3,6]', '[1,3.0[', '[1.0,6.0]', TRUE, 1, 6, TRUE, FALSE, TRUE),
+      array('[3,6[', '[1,3.0[', '[1.0,6.0[', TRUE, 1, 6, FALSE, FALSE, TRUE),
+      // testIntervalFalseUnion
+      //array(']3,6]', '[1,3.0[', '[1.0,6.0]', TRUE, 1, 6, TRUE, FALSE, TRUE),
+      //array(']3,6[', '[1,3.0[', '[1.0,6.0[', TRUE, 1, 6, FALSE, FALSE, TRUE),
+      array('[3,6]', ']1,3.0]', ']1.0,6.0]', FALSE, 1, 6, TRUE, FALSE, TRUE),
+      array('[3,6[', ']1,3.0]', ']1.0,6.0[', FALSE, 1, 6, FALSE, FALSE, TRUE),
+      array(']3,6]', ']1,3.0]', ']1.0,6.0]', FALSE, 1, 6, TRUE, FALSE, TRUE),
+      array(']3,6[', ']1,3.0]', ']1.0,6.0[', FALSE, 1, 6, FALSE, FALSE, TRUE),
+      array('[3,6]', ']1,3.0[', ']1.0,6.0]', FALSE, 1, 6, TRUE, FALSE, TRUE),
+      array('[3,6[', ']1,3.0[', ']1.0,6.0[', FALSE, 1, 6, FALSE, FALSE, TRUE),
+      // testIntervalFalseUnion
+      //array(']3,6]', ']1,3.0[', ']1.0,6.0]', FALSE, 1, 6, TRUE, FALSE, TRUE),
+      //array(']3,6[', ']1,3.0[', ']1.0,6.0[', FALSE, 1, 6, FALSE, FALSE, TRUE),
+      
+      // Intervals unite in only one point.
+      // $interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array('[1,3]', '[3,6]', '[1,6]', TRUE, 1, 6, TRUE, FALSE, FALSE),
 
       // A union will never results in empty interval unless two empty intervals
       // are united.
@@ -459,7 +491,7 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
    */
   public function testIntervalUnion($interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats) {
     $r = new MathInterval($interval);
-    $r->union($union);
+    $this->assertInstanceOf('MathInterval', $r->union($union));
     $this->assertEquals($expLBoundIn, $r->includeLowerBound(), 'Include lower bound.');
     $this->assertEquals($expLBound, $r->getLowerBound(), 'Value lower bound.');
     $this->assertEquals($expUBound, $r->getUpperBound(), 'Value upper bound.');
@@ -467,6 +499,105 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($expEmpty, $r->isEmpty(), 'Is empty range.');
     $this->assertEquals($expFloats, $r->allowFloats(), 'Range allows floats.');  
     $this->assertEquals($output, $r->__toString());
+  }
+
+  function dataProviderIntervalFalseUnion() {
+    return array(
+      // Intervals with equal values but different inclusions.
+      // $interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
+      array(']1,3[', ']3,6]'),
+      array(']1,3[', ']3,6['),
+      array('[1,3[', ']3,6]'),
+      array('[1,3[', ']3,6['),
+      array(']3,6]', ']1,3['),
+      array(']3,6[', ']1,3['),
+      array(']3,6]', '[1,3['),
+      array(']3,6[', '[1,3['),
+      array(']1.0,3[', ']3,6]'),
+      array(']1.0,3[', ']3,6['),
+      array('[1.0,3[', ']3,6]'),
+      array('[1.0,3[', ']3,6['),
+      array(']3,6]', ']1.0,3['),
+      array(']3,6[', ']1.0,3['),
+      array(']3,6]', '[1.0,3['),
+      array(']3,6[', '[1.0,3['),
+
+      array('[1,2]', '[5,6]'),
+      array('[1,2]', '[5,6['),
+      array('[1,2]', ']5,6]'),
+      array('[1,2]', ']5,6['),
+      array('[1,2[', '[5,6]'),
+      array('[1,2[', '[5,6['),
+      array('[1,2[', ']5,6]'),
+      array('[1,2[', ']5,6['),
+      array(']1,2]', '[5,6]'),
+      array(']1,2]', '[5,6['),
+      array(']1,2]', ']5,6]'),
+      array(']1,2]', ']5,6['),
+      array(']1,2[', '[5,6]'),
+      array(']1,2[', '[5,6['),
+      array(']1,2[', ']5,6]'),
+      array(']1,2[', ']5,6['),
+
+      array('[5,6]', '[1,2]'),
+      array('[5,6[', '[1,2]'),
+      array(']5,6]', '[1,2]'),
+      array(']5,6[', '[1,2]'),
+      array('[5,6]', '[1,2['),
+      array('[5,6[', '[1,2['),
+      array(']5,6]', '[1,2['),
+      array(']5,6[', '[1,2['),
+      array('[5,6]', ']1,2]'),
+      array('[5,6[', ']1,2]'),
+      array(']5,6]', ']1,2]'),
+      array(']5,6[', ']1,2]'),
+      array('[5,6]', ']1,2['),
+      array('[5,6[', ']1,2['),
+      array(']5,6]', ']1,2['),
+      array(']5,6[', ']1,2['),
+
+      array('[1.0,2]', '[5,6]'),
+      array('[1.0,2]', '[5,6['),
+      array('[1.0,2]', ']5,6]'),
+      array('[1.0,2]', ']5,6['),
+      array('[1.0,2[', '[5,6]'),
+      array('[1.0,2[', '[5,6['),
+      array('[1.0,2[', ']5,6]'),
+      array('[1.0,2[', ']5,6['),
+      array(']1.0,2]', '[5,6]'),
+      array(']1.0,2]', '[5,6['),
+      array(']1.0,2]', ']5,6]'),
+      array(']1.0,2]', ']5,6['),
+      array(']1.0,2[', '[5,6]'),
+      array(']1.0,2[', '[5,6['),
+      array(']1.0,2[', ']5,6]'),
+      array(']1.0,2[', ']5,6['),
+
+      array('[5,6]', '[1.0,2]'),
+      array('[5,6[', '[1.0,2]'),
+      array(']5,6]', '[1.0,2]'),
+      array(']5,6[', '[1.0,2]'),
+      array('[5,6]', '[1.0,2['),
+      array('[5,6[', '[1.0,2['),
+      array(']5,6]', '[1.0,2['),
+      array(']5,6[', '[1.0,2['),
+      array('[5,6]', ']1.0,2]'),
+      array('[5,6[', ']1.0,2]'),
+      array(']5,6]', ']1.0,2]'),
+      array(']5,6[', ']1.0,2]'),
+      array('[5,6]', ']1.0,2['),
+      array('[5,6[', ']1.0,2['),
+      array(']5,6]', ']1.0,2['),
+      array(']5,6[', ']1.0,2['),
+    );
+  }
+  
+  /**
+   * @dataProvider dataProviderIntervalFalseUnion
+   */
+  public function testIntervalFalseUnion($interval, $union) {
+    $r = new MathInterval($interval);
+    $this->assertFalse($r->union($union));
   }
 
   function dataProviderIntervalIntersection() {
