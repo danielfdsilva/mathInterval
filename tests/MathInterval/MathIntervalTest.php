@@ -7,19 +7,17 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array('qwe'),
       array('(1,2)'),
       array('1,2'),
-      array('[1,2] or 3'),
-
-      // The function contructor relies on compute().
-      // That function can be tested through this.
-      array('[1,2] orq [3,4]'),
-      array('[1,2] adn [3,4]'),
-      array('[1,2] or [3,5] and, [3,10]'),
-
-      // Test expressions with parenthesis.
-      array('[1,2] or [3,5] and ()[3,10])'),
-      array('[1,2] or [3,5] and (((([3,10])))'),
-      array('(([1,2] or (([3,5]) and [3,10]))'),
-      array('([1,2] or ([3,5] and) [3,10])'),
+      array('[1,2'),
+      array('[1,2]]'),
+      array('[1 , 2]'),
+      
+      // A valid MathIntervalCollection expression is still not
+      // valid for MathInterval
+      array('[1,2] or [3,5]'),
+      array('[1,2] or [3,5] or [2,6]'),
+      array('[1,2] and [3,5]'),
+      array('[1,2] or [3,5] and [4,5]'),
+      array('[1,2] or ([3,5] and [4,5])'),
     );
   }
 

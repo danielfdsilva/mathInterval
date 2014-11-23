@@ -7,6 +7,9 @@
  * @package MathInterval
  * @version 1.1.0
  */
+ 
+// Match: [1,2].
+define('MATH_INTERVAL_REGEX', '(\[|\])(-?[0-9]+(?:\.?[0-9]+)?),(-?[0-9]+(?:\.?[0-9]+)?)(\[|\])');
 
 /**
  * Library to use Mathematical Intervals.
@@ -17,9 +20,6 @@
  * different intervals.
  */
 class MathInterval {
-  
-  // Match: [1,2].
-  const INTERVAL_REGEX = '(\[|\])(-?[0-9]+(?:\.?[0-9]+)?),(-?[0-9]+(?:\.?[0-9]+)?)(\[|\])';
 
   /**
    * MathInterval version.
@@ -72,9 +72,7 @@ class MathInterval {
 
   /**
    * MathInterval constructor.
-   * Computes a mathematical range from the provided expression.
-   * 
-   * @uses MathInterval::compute($expression)
+   * Computes a mathematical interval from the provided expression.
    * 
    * @param string $expression
    *   The interval to compute.
@@ -96,7 +94,7 @@ class MathInterval {
       break;
     }
     
-    if (preg_match('/^'.MathInterval::INTERVAL_REGEX.'$/', $expression, $pieces)) {
+    if (preg_match('/^'.MATH_INTERVAL_REGEX.'$/', $expression, $pieces)) {
       // Extracted interval.
       list(, $lbound_in_ex, $lbound, $ubound, $ubound_in_ex) = $pieces;
       // Convert upper and lower bound to number by adding 0.
@@ -283,8 +281,8 @@ class MathInterval {
    * Computes the union of this interval with a given one.
    * @access public
    * 
-   * @param string $expression
-   *   The interval to unite.
+   * @param (string|MathIterval) $expression
+   *   The interval to unite in expression form or MathIterval
    * 
    * @throws MathIntervalException
    *   - If the provided expression is invalid.
@@ -294,7 +292,7 @@ class MathInterval {
    *   The updated interval.
    */
   public function union($expression) {
-    $toJoin = new MathInterval($expression);
+    $toJoin = ($expression instanceof MathInterval) ? $expression : new MathInterval($expression);
 
     // Handle float values.
     $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
@@ -428,8 +426,8 @@ class MathInterval {
    * Computes the intersection of this interval with a given one.
    * @access public
    * 
-   * @param string $expression
-   *   The interval to intersect.
+   * @param (string|MathIterval) $expression
+   *   The interval to unite in expression form or MathIterval
    * 
    * @throws MathIntervalException
    *   - If the provided expression is invalid.
@@ -439,7 +437,7 @@ class MathInterval {
    *   The updated interval.
    */
   public function intersection($expression) {
-    $toJoin = new MathInterval($expression);
+    $toJoin = ($expression instanceof MathInterval) ? $expression : new MathInterval($expression);
     
     // Handle float values.
     $this->allowFloat = $this->allowFloat || $toJoin->allowFloats();
