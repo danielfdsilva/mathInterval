@@ -170,30 +170,39 @@ class MathIntervalCollection implements Iterator {
    *   The result of the validation.
    */
   public function inInterval($value) {
+    // To be true the value needs to belong in just one of the intervals.
+    foreach ($this as $interval) {
+      if ($interval->inInterval($value)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   /**
-   * Check whether the interval is empty.
+   * Check whether the interval collection is empty.
    * @access public
    * 
    * @return Boolean
-   *   Whether the interval is empty.
+   *   Whether the interval collection is empty.
    */
   public function isEmpty() {
-    // TODO: isEmpty()
-    return $this->emptyInterval;
+    // When an interval collection is empty there's only one interval
+    // in the intervals array. If there were more than one empty
+    // intervals they would be merged.
+    return $this->totalIntervals() == 1 ? $this->get(0)->isEmpty() : FALSE;
   }
 
   /**
-   * Check whether the interval allows floating values.
+   * Check whether the interval collection allows floating values.
    * @access public
    * 
    * @return Boolean
-   *   Whether the interval allows floating values.
+   *   Whether the interval collection allows floating values.
    */
   public function allowFloats() {
-    // TODO: allowFloats()
-    return $this->allowFloat;
+    // If one interval allows float values all will.
+    return $this->get(0)->allowFloats();
   }
 
   /**
@@ -246,20 +255,8 @@ class MathIntervalCollection implements Iterator {
     // After all intervals from the other collection have been merged or added,
     // merge the existing intervals to ensure that overlapping intervals
     // are combined.
-    while (TRUE) {
-      $tot = $this->totalIntervals();
-      //print($this . "\n");
-      for ($i=0; $i < $tot; $i++) {
-        for ($j=$i+1; $j < $tot; $j++) {
-          //print('Comparing: ' . $this->get($i) . ' with ' . $this->get($j) . "\n");
-          if ($this->get($i)->union($this->get($j))) {
-            $this->remove($j);
-            continue 3;
-          }
-        }
-      }
-      break;
-    }
+    $this->_selfUnion();
+    
     return $this;
   }
 
@@ -277,7 +274,75 @@ class MathIntervalCollection implements Iterator {
    * @return MathInterval
    *   The updated interval.
    */
-  public function intersection($expression) {    
+  public function intersection($expression) {
+    if ($expression instanceof MathIntervalCollection) {
+      $colToJoin = $expression;
+    }
+    else {
+      if ($expression instanceof MathInterval) {
+        $expression = $expression->__toString();
+      }
+      $colToJoin = new MathIntervalCollection($expression);
+    }
+
+    $newIntervals = array();
+    // Loop over each interval in the collection to join.
+    foreach ($colToJoin as $intervalToJoin) {
+      // Each interval of the collection needs to be intersected with each
+      // interval of the interval array.
+      //
+      // For example:
+      // $c = new MathIntervalCollection('[1,10] or [16,20]');
+      // $c->intersection(']7,9] or [15,18]');
+      //
+      // ]7,9] needs to intersect with [1,10] and with [16,20]
+      // which results in ]7,9]
+      // [15,18] also needs to intersect with [1,10] and with [16,20]
+      // which results in [16,18]
+      //
+      // Merging the two results we get ]7,9] or [16,18]
+      // This would have been the equivalent of doing:
+      // ([1,10] or [16,20]) and (]7,9] or [15,18])
+      //
+      // If the intervals were updated on the go the result would be
+      // an empty set.
+      $copy = array();
+      foreach ($this as $interval) {
+        // Create a copy of the interval object before the intersection.
+        $copyInterval = clone $interval;
+        $copyInterval->intersection($intervalToJoin);
+        $copy[] = $copyInterval;
+      }
+
+      $newIntervals = array_merge($newIntervals, $copy);
+    }
+    $this->intervals = $newIntervals;
+
+    // After all intervals from the other collection have been merged or added,
+    // merge the existing intervals to ensure that overlapping intervals
+    // are combined.
+    $this->_selfUnion();
+  }
+
+  /**
+   * Recursively merges all the intervals in the array to flatten it
+   * as much as possible.
+   */
+  private function _selfUnion() {
+    while (TRUE) {
+      $tot = $this->totalIntervals();
+      //print($this . "\n");
+      for ($i=0; $i < $tot; $i++) {
+        for ($j=$i+1; $j < $tot; $j++) {
+          //print('Comparing: ' . $this->get($i) . ' with ' . $this->get($j) . "\n");
+          if ($this->get($i)->union($this->get($j))) {
+            $this->remove($j);
+            continue 3;
+          }
+        }
+      }
+      break;
+    }
   }
 
   /**
@@ -301,19 +366,6 @@ class MathIntervalCollection implements Iterator {
    */
   private function get($position) {
     return $this->intervals[$position];
-  }
-
-  /**
-   * Sets an interval at the given position.
-   * 
-   * @param int
-   *   Position of the interval.
-   * 
-   * @return MathInterval
-   *   The interval.
-   */
-  private function set($interval, $position) {
-    $this->intervals[$position] = $interval;
   }
 
   /**

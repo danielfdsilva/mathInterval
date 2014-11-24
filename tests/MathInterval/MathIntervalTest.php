@@ -185,6 +185,23 @@ class MathIntervalTest extends PHPUnit_Framework_TestCase {
       array(']1,10[', ']3,4]', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
       array(']1,10[', ']3,4[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
 
+      array('[3,4]', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[3,4[', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array(']3,4]', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array(']3,4[', '[1,10]', '[1,10]', TRUE, 1, 10, TRUE, FALSE, FALSE),
+      array('[3,4]', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[3,4[', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array(']3,4]', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array(']3,4[', '[1,10[', '[1,10[', TRUE, 1, 10, FALSE, FALSE, FALSE),
+      array('[3,4]', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array('[3,4[', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']3,4]', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array(']3,4[', ']1,10]', ']1,10]', FALSE, 1, 10, TRUE, FALSE, FALSE),
+      array('[3,4]', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array('[3,4[', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']3,4]', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+      array(']3,4[', ']1,10[', ']1,10[', FALSE, 1, 10, FALSE, FALSE, FALSE),
+
       // $interval, $union, $output, $expLBoundIn, $expLBound, $expUBound, $expUBoundIn, $expEmpty, $expFloats
       array('[1,3.14]', '[3.14,4]', '[1.0,4.0]', TRUE, 1, 4, TRUE, FALSE, TRUE),
       array('[1,3.14]', '[3.14,4[', '[1.0,4.0[', TRUE, 1, 4, FALSE, FALSE, TRUE),
