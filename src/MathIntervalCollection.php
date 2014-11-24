@@ -2,12 +2,11 @@
 require 'MathInterval.php';
 
 /**
- * @file MathInterval.php
- * Contains the MathInterval Library.
+ * @file MathIntervalCollection.php
  * 
  * @author Daniel da Silva
  * @package MathInterval
- * @version 1.1.0
+ * @version 2.0.0
  */
 
 // In class constants you can't define constants with concatenation

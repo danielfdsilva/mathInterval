@@ -1,11 +1,10 @@
 <?php
 /**
  * @file MathInterval.php
- * Contains the MathInterval Library.
  * 
  * @author Daniel da Silva
  * @package MathInterval
- * @version 1.1.0
+ * @version 2.0.0
  */
  
 // Match: [1,2].
@@ -24,7 +23,7 @@ class MathInterval {
   /**
    * MathInterval version.
    */
-   const VERSION = '1.1.0';
+   const VERSION = '2.0.0';
 
   /**
    * Whether the beginning of the interval is closed.
