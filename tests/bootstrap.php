@@ -1,3 +1,3 @@
 <?php
 
-require "src/MathInterval.php";
+require "src/MathIntervalCollection.php";

@@ -44,7 +44,6 @@ $interval->inInterval(15.25); // TRUE
 ```
 
 ### Union
-> **BUG**: The union method is broken. Do not use. See [issue #4](https://github.com/danielfdsilva/mathInterval/issues/4)
 
 ```php
 // Create your first interval.
@@ -74,26 +73,42 @@ print $interval; // [17,20]
 MathInterval also allows you to use expressions to initialize and compute intervals. The official symbols for intersections and union are ∩ and ⋃, but, since these are hard to type, MathInterval uses ```and``` and ```or```.
 
 For example:
-> **BUG**: The union method is broken. Do not use (or) in the expression. See [issue #4](https://github.com/danielfdsilva/mathInterval/issues/4)
+
 
 ```php
 // [5,20] ⋃ [10,25]
-$interval = new MathInterval('[5,20] or [10,25]');
+$interval = new MathIntervalCollection('[5,20] or [10,25]');
 print $interval; // [5,25]
 
 // [5,20] ∩ [10,25]
-$interval = new MathInterval('[5,20] and [10,25]');
+$interval = new MathIntervalCollection('[5,20] and [10,25]');
 print $interval; // [10,20]
 
 // You can chain as many values as needed in an expression:
 // [5,20] ∩ [10,25] ⋃ [15,30[
-$interval = new MathInterval('[5,20] and [10,25] or [15,30[');
+$interval = new MathIntervalCollection('[5,20] and [10,25] or [15,30[');
 print $interval; // [10,30[
 
 // You can also use these expressions in the union() and intersection() methods.
 ```
 Just like in any mathematical expression, the order of the operators matters and parenthesis can be used to specify the order of the operations.  
 For example: ```[5,20] ∩ ([10,25] ⋃ [15,30[)``` = ```[5,20] ∩ [10,30[``` = ```[10,20]```
+
+**With complex expressions you must use `MathIntervalCollection`. All the methods available in `MathInterval` like union and intersection are also available here.**
+
+```php
+$interval = new MathIntervalCollection('[1,10]');
+$interval->union('[16,20]');
+// Note that some intervals are not possible to unite therefore they
+// will be left as an expression.
+print $interval; // [1,10] or [16,20]
+
+
+$interval = new MathIntervalCollection('[1,10] or [16,20]');
+$interval->intersection(']7,9] or [15,18]');
+print $interval; // ]7,9] or [16,18]
+// This would be the same as ([1,10] or [16,20]) and (]7,9] or [15,18])
+```
 
 -----
 
